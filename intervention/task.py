@@ -1,4 +1,5 @@
 from utils import BASE_DIR  # Need this import to set the huggingface cache directory
+import os
 import numpy as np
 import torch
 from tqdm import tqdm
