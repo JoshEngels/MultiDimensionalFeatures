@@ -6,10 +6,15 @@ Code for reproducing our paper "Not All Language Model Features Are Linear"
 
 Below are instructions to reproduce each figure. 
 
+All needed dependencies are in requirements.txt; we recommend you create a new conda environment with these libraries, e.g.:
+```
+conda create --name multid_features --file requirements.txt
+```
+This may be a superset of needed dependencies, so feel free to create a fresh environment and only install libraries as needed.
 
 ### Intervention Experiments
 
-Before running experiment, you change BASE_DIR in intervention/utils.py to point to a location on your machine where large artifacts can be downloaded and saved (Mistral and Llama 3 take ~60GB and experiment artifacts are ~100GB).
+Before running experiment, you should change BASE_DIR in intervention/utils.py to point to a location on your machine where large artifacts can be downloaded and saved (Mistral and Llama 3 take ~60GB and experiment artifacts are ~100GB).
 
 To reproduce the intervention results, you will first need to run intervention experiments with the following commands:
 
@@ -21,10 +26,10 @@ python3 circle_probe_interventions.py day a llama --device 0 --intervention_pca_
 python3 circle_probe_interventions.py month a llama --device 0 --intervention_pca_k 5 --probe_on_cos --probe_on_sin
 ```
 
-You can then reproduce Figure 3, and Figure 5, and Figure 6 by running the corresponding cells in intervention/main_text_plots.ipynb, and reproduce Table 1 by examining the corresponding results.csv files in each of the (task, model) directories in BASE_DIR.
+You can then reproduce *Figure 3*, and *Figure 5*, and *Figure 6* by running the corresponding cells in intervention/main_text_plots.ipynb, and reproduce *Table 1* by examining the corresponding results.csv files in each of the (task, model) directories in BASE_DIR.
 
 
-You can reproduce Figure 6 by running 
+You can reproduce *Figure 6* by running 
 ```
 cd intervention
 python3 intervene_in_middle_of_circle.py --only_paper_plots
