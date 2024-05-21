@@ -645,7 +645,9 @@ def activation_patching(
         else (
             "Attention out"
             if layer_type == "attention"
-            else "MLP out" if layer_type == "mlp" else "Attention head out"
+            else "MLP out"
+            if layer_type == "mlp"
+            else "Attention head out"
         )
     )
     plt.title(
