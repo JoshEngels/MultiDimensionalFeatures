@@ -40,7 +40,7 @@ def plot_intervention_on_circle_in_a(task, layer, pca_k, b):
         model = task.get_model()
 
         circle_projection_qr = torch.load(
-            f"{task.prefix}/circle_probes_{circle_letter}/layer_{layer}_token_{token}_pca_{pca_k}.pt"
+            f"{task.prefix}/circle_probes_{circle_letter}/cos_sin_layer_{layer}_token_{token}_pca_{pca_k}.pt"
         )
 
         for problem in task.generate_problems():

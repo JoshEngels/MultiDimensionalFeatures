@@ -29,12 +29,14 @@ python3 circle_probe_interventions.py month a llama --device 0 --intervention_pc
 You can then reproduce *Figure 3*, *Figure 5*, and *Figure 6* by running the corresponding cells in intervention/main_text_plots.ipynb, and reproduce *Table 1* by examining the corresponding results.csv files in each of the (task, model) directories in BASE_DIR.
 
 
-You can reproduce *Figure 6* by running 
+After running these intervention experiments, you can reproduce *Figure 6* by running 
 ```
 cd intervention
 python3 intervene_in_middle_of_circle.py --only_paper_plots
 ```
 and then running the corresponding cell in intervention/main_text_plots.ipynb.
+
+You can reproduce *Figure 14*, *Figure 15*, *Figure 16*, *Table 2*, *Table 3*, and *Table 4* (all from the appendix) by running cells in intervention/appendix_plots.ipynb.
 
 
 ### SAE feature search experiments
