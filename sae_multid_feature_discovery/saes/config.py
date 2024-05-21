@@ -23,9 +23,9 @@ class RunnerConfig(ABC):
     is_dataset_tokenized: bool = True
     context_size: int = 128
     use_cached_activations: bool = False
-    cached_activations_path: Optional[
-        str
-    ] = None  # Defaults to "activations/{dataset}/{model}/{full_hook_name}_{hook_point_head_index}"
+    cached_activations_path: Optional[str] = (
+        None  # Defaults to "activations/{dataset}/{model}/{full_hook_name}_{hook_point_head_index}"
+    )
 
     # SAE Parameters
     d_in: int = 512

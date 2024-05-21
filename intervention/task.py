@@ -67,9 +67,11 @@ def generate_and_save_acts(
                     print(model.to_str_tokens(tokens_to_print))
                 logit_batch, activation_batch = model.run_with_cache(
                     tokens,
-                    names_filter=names_filter
-                    if names_filter != "heads"
-                    else lambda x: "attn" in x,
+                    names_filter=(
+                        names_filter
+                        if names_filter != "heads"
+                        else lambda x: "attn" in x
+                    ),
                 )
                 print(activation_batch.keys())
 
@@ -640,11 +642,11 @@ def activation_patching(
     beginning = (
         "Residual stream"
         if layer_type == "resid"
-        else "Attention out"
-        if layer_type == "attention"
-        else "MLP out"
-        if layer_type == "mlp"
-        else "Attention head out"
+        else (
+            "Attention out"
+            if layer_type == "attention"
+            else "MLP out" if layer_type == "mlp" else "Attention head out"
+        )
     )
     plt.title(
         f"{beginning} patching, same {['a', 'b', 'c'][keep_same_index]}, predict {task.prediction_names[num_chars_in_answer_to_include]}"
