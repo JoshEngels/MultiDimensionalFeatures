@@ -38,7 +38,7 @@ def get_mistral_sae(device, layer):
     return (
         SparseAutoencoder(LanguageModelSAERunnerConfig())
         .load_from_pretrained(
-            f"mistral_saes/Mistral-7B-v0.1_blocks.{layer}.hook_resid_pre_65536_final.pt"
+            f"saes/mistral_saes/Mistral-7B-v0.1_blocks.{layer}.hook_resid_pre_65536_final.pt"
         )
         .to(device)
     )

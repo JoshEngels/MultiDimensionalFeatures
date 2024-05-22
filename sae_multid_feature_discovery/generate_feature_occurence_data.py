@@ -17,24 +17,32 @@ import torch as t
 import transformer_lens
 from datasets import load_dataset
 from utils import get_sae
+import argparse
 
 device = "cuda:0" if t.cuda.is_available() else "cpu"
 
-# Mistral-7B hyperparameters
-# model_name = "mistral-7b"
-# batch_size = 16
-# layers_to_evaluate = [8, 16, 24]
-# num_devices = 2
-# sae_hidden_size = 65536
+parser = argparse.ArgumentParser()
+parser.add_argument(
+    "--model_name", type=str, default="mistral", choices=["mistral", "gpt-2"]
+)
+args = parser.parse_args()
 
+if args.model_name == "mistral":
+    # Mistral-7B hyperparameters
+    model_name = "mistral-7b"
+    batch_size = 16
+    layers_to_evaluate = [8, 16, 24]
+    num_devices = 2
+    sae_hidden_size = 65536
 
-# GPT hyperparameters
-model_name = "gpt-2"
-layers_to_evaluate = range(12)
-batch_size = 64
-num_devices = 1
-num_workers = 8
-sae_hidden_size = 24576
+else:
+    # GPT hyperparameters
+    model_name = "gpt-2"
+    layers_to_evaluate = range(12)
+    batch_size = 64
+    num_devices = 1
+    num_workers = 8
+    sae_hidden_size = 24576
 
 model = transformer_lens.HookedTransformer.from_pretrained(
     model_name, device=device, n_devices=num_devices

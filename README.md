@@ -41,18 +41,20 @@ You can reproduce *Figure 13*, *Figure 14*, *Figure 15*, *Table 2*, *Table 3*, a
 
 ### SAE feature search experiments
 
-Before running experiments, you should again change BASE_DIR in intervention/utils.py to point to a location on your machine where large artifacts can be downloaded and saved.
+Before running experiments, you should again change BASE_DIR in sae_multid_feature_discovery/utils.py to point to a location on your machine where large artifacts can be downloaded and saved.
 
-You will need to generate SAE feature activations to generate the cluster reconstructions (the current hyperparameters in the file work for GPT-2 and automatically download pretrained SAEs for GPT-2; you can comment these out and uncomment out the ones for Mistral, in which case you will need to download our pretrained Mistral SAEs to sae_multid_feature_discovery/saes/mistral_saes):
+You will need to generate SAE feature activations to generate the cluster reconstructions. The GPT-2 SAEs will be automatically downloaded, while for Mistral you will need to download our pretrained Mistral SAEs to sae_multid_feature_discovery/saes/mistral_saes:
 
 ```
 cd sae_multid_feature_discovery
-python3 generate_feature_occurence_data.py
+python3 generate_feature_occurence_data.py --model_name gpt-2
+python3 generate_feature_occurence_data.py --model_name mistral
 ```
 
-You will also need to generate the actual clusters by running clustering.py:
+You will also need to generate the actual clusters by running clustering.py, e.g.
 ```
-python3 clustering.py --model_name [mistral, gpt_2] --clustering_type [spectral, graph]
+python3 clustering.py --model_name gpt-2 --clustering_type spectral --layer 7
+python3 clustering.py --model_name mistral --clustering_type graph --layer 8
 ```
 
 TODO: Eric fill in how to generate cluster reconstructions and figures

@@ -1,3 +1,5 @@
 __pycache__
 intervention/figs
 multi_dim_features
+*.pkl
+sae_multid_feature_discovery/saes/mistral_saes
