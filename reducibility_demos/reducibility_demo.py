@@ -165,7 +165,7 @@ for dataset_num in range(1, 5):
     axs[1].hist(z, bins=100, color="k")
     axs[1].axvline(x=-epsilon, color="red", linestyle=(0, (5, 5)))
     axs[1].axvline(x=epsilon, color="red", linestyle=(0, (5, 5)))
-    axs[1].set_xlabel("normalized projected value z")
+    axs[1].set_xlabel("normalized $\\mathbf{v} \\cdot \\mathbf{f} + c$")
     axs[1].set_ylabel("count")
     if dataset_num == 1:
         height = 65
