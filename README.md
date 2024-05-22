@@ -4,7 +4,7 @@ Code for reproducing our paper "Not All Language Model Features Are Linear"
 
 ## Reproducing each figure
 
-Below are instructions to reproduce each figure. 
+Below are instructions to reproduce each figure (aspirationally)
 
 All needed dependencies are in requirements.txt; we recommend you create a new conda environment with these libraries, e.g.:
 ```
@@ -57,7 +57,22 @@ python3 clustering.py --model_name gpt-2 --clustering_type spectral --layer 7
 python3 clustering.py --model_name mistral --clustering_type graph --layer 8
 ```
 
-TODO: Eric fill in how to generate cluster reconstructions and figures
+To create an interactive cluster reconstruction plot for GPT-2 (TODO), run
+```
+python3 gpt2_figure.py --layer 7 --cluster 0
+```
+To create an interactive cluster reconstruction plot for Mistral 7B, run
+```
+python3 mistral_figure.py --layer 8 --cluster 0
+```
+These will save an html file and a png file to directories within the `sae_multid_feature_discovery` folder. The html can be opened and interacted with in a browser. Mousing over a point will show the context and particular token (in bold) that the representation fired above.
+
+To make the the final polished figures in the paper, we provide different scripts. To produce Figure 13, showing Mistral 7b days and months representations, you can run:
+```
+python3 mistral_days_months.py
+```
+We will add similar scripts for the GPT-2 figures soon.
+
 
 ### Reducibility Experiments
 

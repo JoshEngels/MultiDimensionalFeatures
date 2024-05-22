@@ -1,4 +1,7 @@
-# %%
+"""
+Saves a list of list of indices of SAE features as a pickle file.
+"""
+
 from utils import get_sae, BASE_DIR
 import torch
 from tqdm import tqdm
