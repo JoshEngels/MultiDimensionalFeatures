@@ -50,3 +50,13 @@ cd sae_multi_feature_discovery
 python3 generate_feature_occurence_data.py
 ```
 
+### Reducibility Experiments
+
+You can reproduce *Figure 2*, and *Figure 9* by running
+
+```
+cd reducibility_demos
+python3 reducibility_demo.py
+```
+
+`reducibility_demo.py` is a self-contained code file which generates the synthetic datasets, computes the epsilon-mixture index, computes the separability index, and plots it all.
