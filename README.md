@@ -60,3 +60,8 @@ python3 reducibility_demo.py
 ```
 
 `reducibility_demo.py` is a self-contained code file which generates the synthetic datasets, computes the epsilon-mixture index, computes the separability index, and plots it all.
+
+
+### Explanation via Regression with Residual RGB Plots
+
+To reproduce the residual RGB plots in the paper (*Figure 8*, and *Figure 16*), you must first generate `results.csv` and a folder called `pca_components/` full of files named `layerX_tokenY_pca20.pt`. `results.csv` lists out the addition problems given, and each `layerX_tokenY_pca20.pt` has an array that contains the top 20 PCA components of the hidden states outputted by layer X on token Y for each addition problem. To produce residual RGB plots for LLAMA 3 8B on the months of the year task, generate `results.csv` and `pca_components/` for LLAMA 3 8B, and copy them into `feature_deconstruction/months_of_the_year/`, `cd` to the directory `feature_deconstruction/months_of_the_year/`, and run `python3 months_of_the_year_deconstruction.py`. The same goes for Mistral 7B on the days of the week task, using `feature_deconstruction/days_of_the_week/`.
