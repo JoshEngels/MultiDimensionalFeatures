@@ -22,21 +22,25 @@ from saes.sparse_autoencoder import SparseAutoencoder
 SAVE_DIR = os.path.dirname(os.path.realpath(__file__))
 SCRIPT_DIR = os.path.dirname(os.path.realpath(__file__))
 
+
 def get_similarity_matrix(layer):
-    """Returns the angular similarity matrix beteen all SAE features.
-    """
+    """Returns the angular similarity matrix beteen all SAE features."""
     if os.path.exists(os.path.join(SAVE_DIR, f"sae_layer{layer}_similarity.npy")):
         return np.load(os.path.join(SAVE_DIR, f"sae_layer{layer}_similarity.npy"))
-    
+
     t.set_grad_enabled(False)
-    device = t.device('cuda') if t.cuda.is_available() else t.device('cpu')
+    device = t.device("cuda") if t.cuda.is_available() else t.device("cpu")
 
     sae = SparseAutoencoder.load_from_pretrained(
-        os.path.join(SCRIPT_DIR, "saes", f"Mistral-7B-v0.1_blocks.{args.layer}.hook_resid_pre_65536_final.pt")
+        os.path.join(
+            SCRIPT_DIR,
+            "saes",
+            f"Mistral-7B-v0.1_blocks.{args.layer}.hook_resid_pre_65536_final.pt",
+        )
     ).to(device)
 
-    Wdec_months = sae.W_dec # (65536, 4096) -> (n_months_features, 4096)
-    S = Wdec_months @ Wdec_months.T # (n_months_features, n_months_features)
+    Wdec_months = sae.W_dec  # (65536, 4096) -> (n_months_features, 4096)
+    S = Wdec_months @ Wdec_months.T  # (n_months_features, n_months_features)
     S = t.clamp(S, -1, 1)
     S_ang = 1 - t.arccos(S) / t.pi
     S_ang = S_ang.detach().cpu().numpy()
@@ -45,7 +49,13 @@ def get_similarity_matrix(layer):
     return S_ang
 
 
-def get_cluster_activations(sparse_sae_activations, sae_neurons_in_cluster, decoder_vecs, sample_limit, max_indices=1e9):
+def get_cluster_activations(
+    sparse_sae_activations,
+    sae_neurons_in_cluster,
+    decoder_vecs,
+    sample_limit,
+    max_indices=1e9,
+):
     max_indices = int(max_indices)
     current_token = None
     all_activations = []
@@ -59,15 +69,18 @@ def get_cluster_activations(sparse_sae_activations, sae_neurons_in_cluster, deco
                 sparse_sae_activations["all_token_indices"],
             ),
             0,
-            max_indices
-        ), total=max_indices, disable=True):
+            max_indices,
+        ),
+        total=max_indices,
+        disable=True,
+    ):
         if current_token == None:
             current_token = token_index
             current_activations = np.zeros(4096)
         if token_index != current_token:
             if updated:
                 all_activations.append(current_activations)
-                all_token_indices.append(token_index - 1) # FIXED OFF-BY-ONE ERROR
+                all_token_indices.append(token_index - 1)  # FIXED OFF-BY-ONE ERROR
                 if len(all_activations) >= sample_limit:
                     break
             updated = False
@@ -80,55 +93,68 @@ def get_cluster_activations(sparse_sae_activations, sae_neurons_in_cluster, deco
     return np.stack(all_activations), all_token_indices
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--layer", type=int, default=8)
     parser.add_argument("--cluster", type=int, default=0)
-    parser.add_argument("--size_limit", type=int, help="Size limit for the cluster", default=1000)
-    parser.add_argument("--sample_limit", type=int, help="Max number of reconstructions in plot", default=4_000)
+    parser.add_argument(
+        "--size_limit", type=int, help="Size limit for the cluster", default=1000
+    )
+    parser.add_argument(
+        "--sample_limit",
+        type=int,
+        help="Max number of reconstructions in plot",
+        default=4_000,
+    )
     args = parser.parse_args()
     assert args.layer in [8], "Invalid layer. Must be 8"
     assert os.path.exists(
-        os.path.join(
-            SAVE_DIR,
-            f"mistral_layer_{args.layer}_clusters_cutoff_0.5.pkl"
-        )
+        os.path.join(SAVE_DIR, f"mistral_layer_{args.layer}_clusters_cutoff_0.5.pkl")
     )
-    
+
     FIGURE_SAVE_DIR = os.path.join(
         SAVE_DIR,
         f"mistral_figures_graph",
         f"layer{args.layer}",
     )
     FIGURE_SAVE_DIR_IMGS = os.path.join(
-        SAVE_DIR, 
+        SAVE_DIR,
         f"mistral_figures_graph_imgs",
         f"layer{args.layer}",
     )
     os.makedirs(FIGURE_SAVE_DIR, exist_ok=True)
     os.makedirs(FIGURE_SAVE_DIR_IMGS, exist_ok=True)
 
-    device = t.device('cuda') if t.cuda.is_available() else t.device('cpu')
+    device = t.device("cuda") if t.cuda.is_available() else t.device("cpu")
 
     if os.path.exists(os.path.join(SAVE_DIR, f"sae_layer{args.layer}_decoder.npy")):
-        decoder_vecs = np.load(os.path.join(SAVE_DIR, f"sae_layer{args.layer}_decoder.npy"))
+        decoder_vecs = np.load(
+            os.path.join(SAVE_DIR, f"sae_layer{args.layer}_decoder.npy")
+        )
     else:
         sae = SparseAutoencoder.load_from_pretrained(
-            os.path.join(SCRIPT_DIR, "saes", f"Mistral-7B-v0.1_blocks.{args.layer}.hook_resid_pre_65536_final.pt")
+            os.path.join(
+                SCRIPT_DIR,
+                "saes",
+                f"Mistral-7B-v0.1_blocks.{args.layer}.hook_resid_pre_65536_final.pt",
+            )
         ).to(device)
         decoder_vecs = sae.W_dec.data.cpu().numpy()
-        np.save(os.path.join(SAVE_DIR, f"sae_layer{args.layer}_decoder.npy"), decoder_vecs)
+        np.save(
+            os.path.join(SAVE_DIR, f"sae_layer{args.layer}_decoder.npy"), decoder_vecs
+        )
 
     tokenizer = AutoTokenizer.from_pretrained("mistralai/Mistral-7B-v0.1")
     tokenizer.pad_token = tokenizer.eos_token
 
     sparse_activations = np.load(f"sae_activations_big_layer-{args.layer}.npz")
     S_ang = get_similarity_matrix(args.layer)
-    with open(os.path.join(
-                SAVE_DIR,
-                f"mistral_layer_{args.layer}_clusters_cutoff_0.5.pkl"), "rb") as f:
+    with open(
+        os.path.join(SAVE_DIR, f"mistral_layer_{args.layer}_clusters_cutoff_0.5.pkl"),
+        "rb",
+    ) as f:
         clusters = pickle.load(f)
-    
+
     # clusters is a list of lists. many of these lists have only one element.
     assert args.cluster < len(clusters), "Cluster index out of bounds"
 
@@ -136,43 +162,67 @@ if __name__ == '__main__':
     cluster_sae_featureis = cluster
 
     if len(cluster) > args.size_limit:
-        print(f"Cluster {args.cluster} has too many features ({len(cluster)}), exiting.")
+        print(
+            f"Cluster {args.cluster} has too many features ({len(cluster)}), exiting."
+        )
         exit()
 
     reconstructions, token_indices = get_cluster_activations(
-        sparse_activations, 
-        set(cluster_sae_featureis), 
-        decoder_vecs, 
-        args.sample_limit
+        sparse_activations, set(cluster_sae_featureis), decoder_vecs, args.sample_limit
     )
-    token_strs = tokenizer.convert_ids_to_tokens(sparse_activations['all_tokens'])
+    token_strs = tokenizer.convert_ids_to_tokens(sparse_activations["all_tokens"])
 
     contexts = []
     for token_index in token_indices:
-        contexts.append(token_strs[max(0, token_index-10):token_index+1]) # now using :token_index+1 since the off by one error is fixed in `get_cluster_activations`
+        contexts.append(
+            token_strs[max(0, token_index - 10) : token_index + 1]
+        )  # now using :token_index+1 since the off by one error is fixed in `get_cluster_activations`
 
-    fig = sp.make_subplots(rows=2, cols=4, subplot_titles=("Cosine similarity of decoder features",
-                                                            "",
-                                                            "SVD values of decoder features",
-                                                            "SVD values of mean-centered decoder features",
-                                                            *(f"PCA dims {pcai}, {pcai+1}" for pcai in range(min(5, len(cluster))-1))),
-                                            horizontal_spacing=0.05)
+    fig = sp.make_subplots(
+        rows=2,
+        cols=4,
+        subplot_titles=(
+            "Cosine similarity of decoder features",
+            "",
+            "SVD values of decoder features",
+            "SVD values of mean-centered decoder features",
+            *(f"PCA dims {pcai}, {pcai+1}" for pcai in range(min(5, len(cluster)) - 1)),
+        ),
+        horizontal_spacing=0.05,
+    )
 
     cluster_features = decoder_vecs[cluster]
     cos_sims = cluster_features @ cluster_features.T
     np.fill_diagonal(cos_sims, np.nan)
-    fig.add_trace(go.Heatmap(z=cos_sims, colorscale='Viridis', zmin=-1, zmax=1,
-                            colorbar=dict(title="Cosine similarity", x=0.25, y=0.83, len=0.4),
-                            showlegend=False), row=1, col=1)
+    fig.add_trace(
+        go.Heatmap(
+            z=cos_sims,
+            colorscale="Viridis",
+            zmin=-1,
+            zmax=1,
+            colorbar=dict(title="Cosine similarity", x=0.25, y=0.83, len=0.4),
+            showlegend=False,
+        ),
+        row=1,
+        col=1,
+    )
 
     u, s, vh = np.linalg.svd(cluster_features.T, full_matrices=False)
-    fig.add_trace(go.Scatter(x=list(range(len(s))), y=s, mode='lines+markers', showlegend=False), row=1, col=3)
+    fig.add_trace(
+        go.Scatter(x=list(range(len(s))), y=s, mode="lines+markers", showlegend=False),
+        row=1,
+        col=3,
+    )
     fig.update_xaxes(title_text="Rank", row=1, col=3)
     fig.update_yaxes(title_text="Singular value", row=1, col=3)
 
     cluster_features_centered = cluster_features.T - cluster_features.T.mean(axis=0)
     u, s, vh = np.linalg.svd(cluster_features_centered, full_matrices=False)
-    fig.add_trace(go.Scatter(x=list(range(len(s))), y=s, mode='lines+markers', showlegend=False), row=1, col=4)
+    fig.add_trace(
+        go.Scatter(x=list(range(len(s))), y=s, mode="lines+markers", showlegend=False),
+        row=1,
+        col=4,
+    )
     fig.update_xaxes(title_text="Rank", row=1, col=4)
     fig.update_yaxes(title_text="Singular value", row=1, col=4)
 
@@ -180,7 +230,7 @@ if __name__ == '__main__':
     for context in contexts:
         c = ""
         for i, token in enumerate(context):
-            if i == len(context)-1:
+            if i == len(context) - 1:
                 c += "<b>" + token.replace("▁", " ") + "</b>"
             else:
                 c += token
@@ -189,21 +239,37 @@ if __name__ == '__main__':
     # PCA scatter plots
     pca = PCA(n_components=min(5, len(cluster)))
     reconstructions_pca = pca.fit_transform(reconstructions)
-    for pcai in range(min(5, len(cluster))-1):
-        fig.add_trace(go.Scatter(x=reconstructions_pca[:, pcai], y=reconstructions_pca[:, pcai+1],
-                                mode='markers', marker=dict(color='darkblue', opacity=0.5), text=contexts_str,
-                                hoverinfo='text',
-                                hoverlabel=dict(bgcolor='white', font=dict(color='black'), bordercolor='black'),
-                                showlegend=False),
-                    row=2, col=pcai+1)
-        fig.update_xaxes(title_text=f"PCA dim {pcai}", row=2, col=pcai+1)
-        fig.update_yaxes(title_text=f"PCA dim {pcai+1}", row=2, col=pcai+1)
-        fig.update_yaxes(title_standoff=0, row=2, col=pcai+1)
+    for pcai in range(min(5, len(cluster)) - 1):
+        fig.add_trace(
+            go.Scatter(
+                x=reconstructions_pca[:, pcai],
+                y=reconstructions_pca[:, pcai + 1],
+                mode="markers",
+                marker=dict(color="darkblue", opacity=0.5),
+                text=contexts_str,
+                hoverinfo="text",
+                hoverlabel=dict(
+                    bgcolor="white", font=dict(color="black"), bordercolor="black"
+                ),
+                showlegend=False,
+            ),
+            row=2,
+            col=pcai + 1,
+        )
+        fig.update_xaxes(title_text=f"PCA dim {pcai}", row=2, col=pcai + 1)
+        fig.update_yaxes(title_text=f"PCA dim {pcai+1}", row=2, col=pcai + 1)
+        fig.update_yaxes(title_standoff=0, row=2, col=pcai + 1)
 
-    fig.update_layout(height=800, width=1200, title_text=f"Cluster rank {args.cluster} with {len(cluster)} features.",
-                    font=dict(size=12))  # Adjust the main title font size here
-                    #   subplot_titles_font=dict(size=8))  # Adjust the subplot title font size here
+    fig.update_layout(
+        height=800,
+        width=1200,
+        title_text=f"Cluster rank {args.cluster} with {len(cluster)} features.",
+        font=dict(size=12),
+    )  # Adjust the main title font size here
+    #   subplot_titles_font=dict(size=8))  # Adjust the subplot title font size here
     fig.update_annotations(font_size=13)
 
     fig.write_html(os.path.join(FIGURE_SAVE_DIR, f"cluster{args.cluster:04d}.html"))
-    fig.write_image(os.path.join(FIGURE_SAVE_DIR_IMGS, f"cluster{args.cluster:04d}.png"))
+    fig.write_image(
+        os.path.join(FIGURE_SAVE_DIR_IMGS, f"cluster{args.cluster:04d}.png")
+    )

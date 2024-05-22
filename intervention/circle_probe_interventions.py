@@ -484,8 +484,6 @@ fig.savefig(
 
 plt.close()
 
-# TODO: Josh: Continue working in this direction, is this enough to prove sufficiency?
-
 
 # %%
 

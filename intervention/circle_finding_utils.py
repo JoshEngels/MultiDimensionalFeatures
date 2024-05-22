@@ -335,7 +335,7 @@ def get_logit_diffs_from_subspace_formula_resid_intervention(
         for problem in problems:
             prompt = problem.prompt
 
-            # TODO: Josh this needs to be fixed to make it work with c
+            # TODO: ANON this needs to be fixed to make it work with c
             original_a, original_b, original_c = problem.info
 
             if letter_to_intervene_on == "a":
