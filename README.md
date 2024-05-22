@@ -26,7 +26,7 @@ python3 circle_probe_interventions.py day a llama --device 0 --intervention_pca_
 python3 circle_probe_interventions.py month a llama --device 0 --intervention_pca_k 5 --probe_on_cos --probe_on_sin
 ```
 
-You can then reproduce *Figure 3*, *Figure 5*, and *Figure 6* by running the corresponding cells in intervention/main_text_plots.ipynb, and reproduce *Table 1* by examining the corresponding results.csv files in each of the (task, model) directories in BASE_DIR.
+You can then reproduce *Figure 3*, *Figure 5*, *Figure 6*, and *Table 1* by running the corresponding cells in intervention/main_text_plots.ipynb.
 
 
 After running these intervention experiments, you can reproduce *Figure 6* by running 

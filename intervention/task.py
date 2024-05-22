@@ -31,7 +31,7 @@ def generate_and_save_acts(
     save_file_prefix,
     verbose=False,
     save_results_csv=True,
-    save_best_logit=False,
+    save_best_logit=True,
 ):
     if save_file_prefix != "" and save_file_prefix[-1] != "_":
         save_file_prefix += "_"
@@ -139,7 +139,7 @@ def get_all_acts(
     save_results_csv=True,
     names_filter=lambda x: "resid_post" in x or "hook_embed" in x,
     save_file_prefix="",
-    save_best_logit=False,
+    save_best_logit=True,
 ):
     if save_file_prefix != "" and save_file_prefix[-1] != "_":
         save_file_prefix += "_"
