@@ -1,4 +1,5 @@
 [gpt2nonlinears.pdf](https://github.com/JoshEngels/MultiDimensionalFeatures/files/15419165/gpt2nonlinears.pdf)
+![mistral7bnonlinears](https://github.com/JoshEngels/MultiDimensionalFeatures/assets/15754392/48b9b3d6-921a-4fc0-874e-2ede4731ae5d)
 
 # Multi-Dimensional Features
 Code for reproducing our paper "Not All Language Model Features Are Linear"
