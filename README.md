@@ -43,7 +43,7 @@ You can reproduce *Figure 13*, *Figure 14*, *Figure 15*, *Table 2*, *Table 3*, a
 
 Before running experiments, you should again change BASE_DIR in sae_multid_feature_discovery/utils.py to point to a location on your machine where large artifacts can be downloaded and saved.
 
-You will need to generate SAE feature activations to generate the cluster reconstructions. The GPT-2 SAEs will be automatically downloaded, while for Mistral you will need to download our pretrained Mistral SAEs to sae_multid_feature_discovery/saes/mistral_saes:
+You will need to generate SAE feature activations to generate the cluster reconstructions. The GPT-2 SAEs will be automatically downloaded when you run the below scripts, while for Mistral you will need to download our pretrained Mistral SAEs from https://www.dropbox.com/scl/fo/hznwqj4fkqvpr7jtx9uxz/AJUe0wKmJS1-fD982PuHb5A?rlkey=ffnq6pm6syssf2p7t98q9kuh1&dl=0 to sae_multid_feature_discovery/saes/mistral_saes. You can generate SAE feature activations with one of the following two commands:
 
 ```
 cd sae_multid_feature_discovery

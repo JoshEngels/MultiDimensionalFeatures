@@ -1,7 +1,7 @@
 from huggingface_hub import hf_hub_download
 import os
 
-BASE_DIR = "/data/scratch/ANON/"
+BASE_DIR = "/data/scratch/jae/"
 
 
 def get_gpt2_sae(device, layer):
