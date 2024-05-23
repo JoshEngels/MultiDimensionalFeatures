@@ -1,4 +1,4 @@
-![mistral7bnonlinears](https://github.com/JoshEngels/MultiDimensionalFeatures/assets/15754392/48b9b3d6-921a-4fc0-874e-2ede4731ae5d)
+<img width="1857" alt="GPT-2 Auto-Discovered Multi-Dimensional Features" src="https://github.com/JoshEngels/MultiDimensionalFeatures/assets/15754392/d68f785d-9462-44be-8904-62845508ff06">
 
 # Multi-Dimensional Features
 Code for reproducing our paper "Not All Language Model Features Are Linear"
