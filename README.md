@@ -6,7 +6,7 @@ This is the github repo for our paper ["Not All Language Model Features Are Line
 
 ## Reproducing each figure
 
-Below are instructions to reproduce each figure (aspirationally)
+Below are instructions to reproduce each figure (aspirationally). 
 
 All needed dependencies are in requirements.txt; we recommend you create a new conda environment with these libraries, e.g.:
 ```
@@ -91,3 +91,21 @@ python3 reducibility_demo.py
 ### Explanation via Regression with Residual RGB Plots
 
 To reproduce the residual RGB plots in the paper (*Figure 8*, and *Figure 16*), you must first generate `results.csv` and a folder called `pca_components/` full of files named `layerX_tokenY_pca20.pt`. These files should all be in BASE_DIR after running the intervention_experiments above. `results.csv` lists out the addition problems given, and each `layerX_tokenY_pca20.pt` has an array that contains the top 20 PCA components of the hidden states outputted by layer X on token Y for each addition problem. To produce residual RGB plots for LLAMA 3 8B on the months of the year task, generate `results.csv` and `pca_components/` for LLAMA 3 8B, and copy them into `feature_deconstruction/months_of_the_year/`, `cd` to the directory `feature_deconstruction/months_of_the_year/`, and run `python3 months_of_the_year_deconstruction.py`. The same goes for Mistral 7B on the days of the week task, using `feature_deconstruction/days_of_the_week/`.
+
+
+## Contact
+
+If you have any questions about the paper or reproducing results, feel free to email jengels@mit.edu.
+
+## Citation
+
+```
+@article{engels2024language,
+      title={Not All Language Model Features Are Linear}, 
+      author={Joshua Engels and Isaac Liao and Eric J. Michaud and Wes Gurnee and Max Tegmark},
+      year={2024},
+      journal={arXiv preprint arXiv:2405.14860}
+}
+```
+
+
