@@ -1,7 +1,7 @@
 <img width="1853" alt="GPT-2 Auto-Discovered Multi-Dimensional Features" src="https://github.com/JoshEngels/MultiDimensionalFeatures/assets/15754392/cbe67ac3-feed-41a2-b31f-2a75406030da">
 
 # Multi-Dimensional Features
-This is the github repo for our paper "Not All Language Model Features Are Linear"
+This is the github repo for our paper ["Not All Language Model Features Are Linear"](https://arxiv.org/abs/2405.14860).
 
 
 ## Reproducing each figure
