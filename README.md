@@ -69,7 +69,7 @@ python3 mistral_figure.py --layer 8 --cluster 0
 ```
 These will save an html file and a png file to directories within the `sae_multid_feature_discovery` folder. The html can be opened and interacted with in a browser. Mousing over a point will show the context and particular token (in bold) that the representation fired above.
 
-To make the the final polished figures in the paper, we provide different scripts. To produce Figure 13, showing Mistral 7b days and months representations, you can run:
+To make the final polished figures in the paper, we provide different scripts. To produce Figure 13, showing Mistral 7b days and months representations, you can run:
 ```
 python3 mistral_days_months.py
 ```
