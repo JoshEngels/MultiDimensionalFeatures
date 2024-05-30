@@ -100,11 +100,11 @@ If you have any questions about the paper or reproducing results, feel free to e
 ## Citation
 
 ```
-@article{engels2024language,
-      title={Not All Language Model Features Are Linear}, 
-      author={Joshua Engels and Isaac Liao and Eric J. Michaud and Wes Gurnee and Max Tegmark},
-      year={2024},
-      journal={arXiv preprint arXiv:2405.14860}
+@article{engels2024not,
+  title={Not All Language Model Features Are Linear},
+  author={Engels, Joshua and Liao, Isaac and Michaud, Eric J and Gurnee, Wes and Tegmark, Max},
+  journal={arXiv preprint arXiv:2405.14860},
+  year={2024}
 }
 ```
 
