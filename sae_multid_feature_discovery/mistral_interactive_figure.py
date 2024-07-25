@@ -92,67 +92,32 @@ def get_cluster_activations(
 
     return np.stack(all_activations), all_token_indices
 
-
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--layer", type=int, default=8)
-    parser.add_argument("--cluster", type=int, default=0)
-    parser.add_argument(
-        "--size_limit", type=int, help="Size limit for the cluster", default=1000
-    )
-    parser.add_argument(
-        "--sample_limit",
-        type=int,
-        help="Max number of reconstructions in plot",
-        default=4_000,
-    )
-    args = parser.parse_args()
-    assert args.layer in [8], "Invalid layer. Must be 8"
-    assert os.path.exists(
-        os.path.join(SAVE_DIR, f"mistral_layer_{args.layer}_clusters_cutoff_0.5.pkl")
-    )
-
-    FIGURE_SAVE_DIR = os.path.join(
-        SAVE_DIR,
-        f"mistral_figures_graph",
-        f"layer{args.layer}",
-    )
-    FIGURE_SAVE_DIR_IMGS = os.path.join(
-        SAVE_DIR,
-        f"mistral_figures_graph_imgs",
-        f"layer{args.layer}",
-    )
-    os.makedirs(FIGURE_SAVE_DIR, exist_ok=True)
-    os.makedirs(FIGURE_SAVE_DIR_IMGS, exist_ok=True)
-
+def main(args):
+    
     device = t.device("cuda") if t.cuda.is_available() else t.device("cpu")
 
-    if os.path.exists(os.path.join(SAVE_DIR, f"sae_layer{args.layer}_decoder.npy")):
-        decoder_vecs = np.load(
-            os.path.join(SAVE_DIR, f"sae_layer{args.layer}_decoder.npy")
-        )
+    # save the decoder vecs as a numpy array, so that in subsequent runs 
+    # we won't have to load the model into GPU memory just to get the decoder
+    if os.path.exists(f"sae_layer{args.layer}_decoder.npy"):
+        decoder_vecs = np.load(f"sae_layer{args.layer}_decoder.npy")
     else:
         sae = SparseAutoencoder.load_from_pretrained(
             os.path.join(
-                SCRIPT_DIR,
-                "saes",
+                args.sae_path,
                 f"Mistral-7B-v0.1_blocks.{args.layer}.hook_resid_pre_65536_final.pt",
             )
         ).to(device)
         decoder_vecs = sae.W_dec.data.cpu().numpy()
         np.save(
-            os.path.join(SAVE_DIR, f"sae_layer{args.layer}_decoder.npy"), decoder_vecs
+            os.path.join(args.sae_path, f"sae_layer{args.layer}_decoder.npy"), decoder_vecs
         )
 
     tokenizer = AutoTokenizer.from_pretrained("mistralai/Mistral-7B-v0.1")
     tokenizer.pad_token = tokenizer.eos_token
 
-    sparse_activations = np.load(f"sae_activations_big_layer-{args.layer}.npz")
+    sparse_activations = np.load(args.activations_file)
     S_ang = get_similarity_matrix(args.layer)
-    with open(
-        os.path.join(SAVE_DIR, f"mistral_layer_{args.layer}_clusters_cutoff_0.5.pkl"),
-        "rb",
-    ) as f:
+    with open(args.clusters_file, "rb") as f:
         clusters = pickle.load(f)
 
     # clusters is a list of lists. many of these lists have only one element.
@@ -269,7 +234,21 @@ if __name__ == "__main__":
     #   subplot_titles_font=dict(size=8))  # Adjust the subplot title font size here
     fig.update_annotations(font_size=13)
 
-    fig.write_html(os.path.join(FIGURE_SAVE_DIR, f"cluster{args.cluster:04d}.html"))
-    fig.write_image(
-        os.path.join(FIGURE_SAVE_DIR_IMGS, f"cluster{args.cluster:04d}.png")
-    )
+    fig.write_html(os.path.join(args.save_dir, f"mistral-7b-layer{args.layer}-cluster{args.cluster:04d}.html"))
+    fig.write_image(os.path.join(args.save_dir, f"mistral-7b-layer{args.layer}-cluster{args.cluster:04d}.png"))
+
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--layer", type=int, default=8)
+    parser.add_argument("--cluster", type=int, default=61) # 61 is days, 832 is months
+    parser.add_argument("--size_limit", type=int, help="Size limit for the cluster", default=1000)
+    parser.add_argument("--sample_limit", type=int, help="Max number of reconstructions in plot", default=4_000)
+    parser.add_argument("--activations_file", type=str, help="File containing SAE activations (occurence_data)",
+                        default="sae_activations_big_layer-8.npz") # NOTE: current naming scheme for activations doesn't distinguish gpt-2 from mistral-7b, so be careful
+    parser.add_argument("--sae_path", type=str, default="saes/mistral_saes",
+                        help="Path to the directory containing the Mistral-7B SAE weights.")
+    parser.add_argument("--save_dir", type=str, default="panes")
+    args = parser.parse_args() 
+
+    main(args)

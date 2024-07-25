@@ -59,21 +59,35 @@ python3 clustering.py --model_name gpt-2 --clustering_type spectral --layer 7
 python3 clustering.py --model_name mistral --clustering_type graph --layer 8
 ```
 
-To create an interactive cluster reconstruction plot for GPT-2 (TODO), run
+Unfortunately, we did not set a seed when we ran spectral clustering in our original experiments, so the clusters you get from the above command may not be the same as the ones we used in the paper. In the `sae_multid_feature_discovery` directory, we provide the GPT-2 (`gpt-2_layer_7_clusters_spectral_n1000.pkl`) and Mistral-7B (`mistral_layer_8_clusters_cutoff_0.5.pkl`) clusters that were used in the paper. For easy reference, here are the GPT-2 SAE feature indices for the days, weeks, and years clusters we reported in the paper (Figure 1):
+
+- Days of week: `[2592, 4445, 4663, 4733, 6531, 8179, 9566, 20927, 24185]`
+- Months of year: `[3977, 4140, 5993, 7299, 9104, 9401, 10449, 11196, 12661, 14715, 17068, 17528, 19589, 21033, 22043, 23304]`
+- Years of 20th century: `[1052, 2753, 4427, 6382, 8314, 9576, 9606, 13551, 19734, 20349]`
+
+As a quick sanity check, the average pairwise cosine sim between decoder vectors for these clusters should be high (0.63, 0.53, and 0.55 respectively, ignoring the self-similarities).
+
+To create an interactive cluster reconstruction plot for GPT-2, run
 ```
-python3 gpt2_figure.py --layer 7 --cluster 0
+python3 gpt2_interactive_figure.py --cluster 138
 ```
+This will produce a plotly html file and a corresponding png file.
+
 To create an interactive cluster reconstruction plot for Mistral 7B, run
 ```
-python3 mistral_figure.py --layer 8 --cluster 0
+python3 mistral_interactive_figure.py --cluster 61
 ```
 These will save an html file and a png file to directories within the `sae_multid_feature_discovery` folder. The html can be opened and interacted with in a browser. Mousing over a point will show the context and particular token (in bold) that the representation fired above.
 
-To make the the final polished figures in the paper, we provide different scripts. To produce Figure 13, showing Mistral 7b days and months representations, you can run:
+To reproduce exactly Figure 1 and Figure 12, showing GPT-2 days, weeks, and years representations, you can run:
+```
+python3 gpt2_days_weeks_years.py
+```
+
+To produce Figure 13, showing Mistral 7b days and months representations, you can run:
 ```
 python3 mistral_days_months.py
 ```
-We will add similar scripts for the GPT-2 figures soon.
 
 
 ### Reducibility Experiments

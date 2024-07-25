@@ -14,7 +14,8 @@ torch.set_grad_enabled(False)
 device = "cpu"
 
 parser = argparse.ArgumentParser()
-parser.add_argument("--model_name", type=str, default="mistral")
+parser.add_argument("--model_name", type=str, default="mistral",
+                    choices=["mistral", "gpt-2"])
 parser.add_argument("--layer", type=int, default=8)
 parser.add_argument(
     "--method", type=str, choices=["graph", "spectral"], default="graph"
