@@ -53,6 +53,8 @@ python3 generate_feature_occurence_data.py --model_name gpt-2
 python3 generate_feature_occurence_data.py --model_name mistral
 ```
 
+You can also directly download the gpt-2 layer 7 and Mistral-7B layer 8 activations data from this Dropbox folder: https://www.dropbox.com/scl/fo/frn4tihzkvyesqoumtl9u/AFPEAa6KFb8mY3NTXIEStnA?rlkey=z60j3g45jzhxwc5s5qxmbjvxs&st=da2tzqk5&dl=0. You should put them in the `sae_multid_feature_discovery` directory.
+
 You will also need to generate the actual clusters by running clustering.py, e.g.
 ```
 python3 clustering.py --model_name gpt-2 --clustering_type spectral --layer 7
