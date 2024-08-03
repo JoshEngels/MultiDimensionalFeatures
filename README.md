@@ -8,11 +8,20 @@ This is the github repo for our paper ["Not All Language Model Features Are Line
 
 Below are instructions to reproduce each figure (aspirationally). 
 
-All needed dependencies are in requirements.txt; we recommend you create a new conda environment with these libraries, e.g.:
+The required pthon packages to run this repo are
 ```
-conda create --name multid_features --file requirements.txt
+transformer_lens sae_lens transformers datasets torch adjustText circuitsvis
 ```
-This may be a superset of needed dependencies, so feel free to create a fresh environment and only install libraries as needed.
+We recommend you creat a new python venv named multid and install these packages,
+either manually using pip or using the existing requirements.txt if you are on a linux
+machine with Cuda 12.1:
+```
+python -m venv multid
+pip install -r requirements.txt 
+OR
+pip install transformer_lens sae_lens transformers datasets torch adjustText circuitsvis
+```
+Let us know if anything does not work with this environment!
 
 ### Intervention Experiments
 
