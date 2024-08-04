@@ -68,13 +68,6 @@ texts = [
     "very early on Friday",
     "very early on Saturday",
     "very early on Sunday",
-    # "halfway between Monday and Tuesday",
-    # "halfway between Tuesday and Wednesday",
-    # "halfway between Wednesday and Thursday",
-    # "halfway between Thursday and Friday",
-    # "halfway between Friday and Saturday",
-    # "halfway between Saturday and Sunday",
-    # "halfway between Sunday and Monday",
 ]
 
 for day in texts:
@@ -98,7 +91,9 @@ skip_up_to = 0
 # for layer in range(81):
 # for layer in range(62, 63):
 # for layer in range(8, 9):
-for layer in range(31, 32):
+for layer in range(30, 31):
+
+    fig, ax1 = plt.subplots()
 
     layer_hidden_states = hidden_states[:, layer]
 
@@ -111,14 +106,63 @@ for layer in range(31, 32):
 
     dims_to_plot = [0, 1]
 
-    plt.scatter(layer_hidden_states_pca[skip_up_to:, dims_to_plot[0]], layer_hidden_states_pca[skip_up_to:, dims_to_plot[1]])
+    ax1.scatter(layer_hidden_states_pca[skip_up_to:, dims_to_plot[0]], layer_hidden_states_pca[skip_up_to:, dims_to_plot[1]])
+    text_labels = []
     for i, txt in enumerate(texts):
         if i >= skip_up_to:
-            plt.annotate(
+            text = ax1.annotate(
                 txt, (layer_hidden_states_pca[i, dims_to_plot[0]], layer_hidden_states_pca[i, dims_to_plot[1]])
             )
+            text_labels.append(text)
 
-    plt.title(f"Layer {layer} ({percent_explained:.2f})")
+    def change_position(i, delta_x, delta_y):
+        text_labels[i].set_position((text_labels[i].get_position()[0] + delta_x, text_labels[i].get_position()[1] + delta_y))
+
+    for i in range(len(texts)):
+        change_position(i, 0.25, 0)
+
+
+    # Thursday
+    change_position(3, -1.7, 0.5)
+
+    # very early on Sunday
+    change_position(-1, -0.2, -.7)
+
+    # Wednesday
+    change_position(2, 0, -0.5)
+
+    change_position(8, 0, -0.6)
+
+    # very early on Tuesday
+    change_position(16, -7, -0.5)
+
+    change_position(15, 0, 0.3)
+
+    # Very late on wednesday
+    change_position(10, -1.9, -0.8)
+
+    # Very late on friday
+    change_position(12, 0, -0.5)
+
+    # Very early on Friday
+    change_position(19, -6, -0.7)
+
+    # Remove outer axis
+    ax1.spines['top'].set_visible(False)
+    ax1.spines['right'].set_visible(False)
+    ax1.spines['left'].set_visible(False)
+    ax1.spines['bottom'].set_visible(False)
+    ax1.set_xticks([])
+    ax1.set_yticks([])
+
+    # Add center axis
+    ax1.axhline(0, color='black', lw=0.5)
+    ax1.axvline(0, color='black', lw=0.5)
+
+    # Make plot square
+    ax1.set_aspect('equal', adjustable='box')
+
+    plt.title(f"Mistral Layer {layer} Projected into Weekday Plane")
 
     plt.show()
 
@@ -139,6 +183,10 @@ texts = [
     "October",
     "November",
     "December",
+    "Fall",
+    "Winter",
+    "Spring",
+    "Summer"
     # "mid January",
     # "mid February",
     # "mid March",
@@ -151,30 +199,30 @@ texts = [
     # "mid October",
     # "mid November",
     # "mid December",
-    "late January",
-    "late February",
-    "late March",
-    "late April",
-    "late May",
-    "late June",
-    "late July",
-    "late August",
-    "late September",
-    "late October",
-    "late November",
-    "late December",
-    "early January",
-    "early February",
-    "early March",
-    "early April",
-    "early May",
-    "early June",
-    "early July",
-    "early August",
-    "early September",
-    "early October",
-    "early November",
-    "early December",
+    # "late January",
+    # "late February",
+    # "late March",
+    # "late April",
+    # "late May",
+    # "late June",
+    # "late July",
+    # "late August",
+    # "late September",
+    # "late October",
+    # "late November",
+    # "late December",
+    # "early January",
+    # "early February",
+    # "early March",
+    # "early April",
+    # "early May",
+    # "early June",
+    # "early July",
+    # "early August",
+    # "early September",
+    # "early October",
+    # "early November",
+    # "early December",
 ]
 
 for month in texts:
@@ -194,7 +242,7 @@ for month in texts:
 hidden_states = np.array(hidden_states)
 
 # for layer in range(81):
-for layer in range(3, 4):
+for layer in range(12, 13):
 
     layer_hidden_states = hidden_states[:, layer]
 
@@ -214,3 +262,5 @@ for layer in range(3, 4):
     plt.title(f"Layer {layer} ({percent_explained:.2f})")
 
     plt.show()
+
+# %%
