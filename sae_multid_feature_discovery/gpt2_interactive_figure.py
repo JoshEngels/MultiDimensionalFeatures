@@ -19,7 +19,7 @@ import einops
 import numpy as np
 from tqdm import tqdm
 from huggingface_hub import hf_hub_download
-from sae_lens import SparseAutoencoderDictionary
+from sae_lens import SAE
 # import transformer_lens
 from transformers import AutoTokenizer
 from datasets import load_dataset
@@ -31,27 +31,11 @@ import plotly.graph_objects as go
 from utils import BASE_DIR
 
 def get_gpt2_sae(device, layer):
-
-    if type(device) == int:
-        device = f"cuda:{device}"
-
-    GPT2_SMALL_RESIDUAL_SAES_REPO_ID = "jbloom/GPT2-Small-SAEs-Reformatted"
-    hook_point = f"blocks.{layer}.hook_resid_pre"
-
-    FILENAME = f"{hook_point}/cfg.json"
-    path = hf_hub_download(repo_id=GPT2_SMALL_RESIDUAL_SAES_REPO_ID, filename=FILENAME)
-
-    FILENAME = f"{hook_point}/sae_weights.safetensors"
-    hf_hub_download(repo_id=GPT2_SMALL_RESIDUAL_SAES_REPO_ID, filename=FILENAME)
-
-    FILENAME = f"{hook_point}/sparsity.safetensors"
-    hf_hub_download(repo_id=GPT2_SMALL_RESIDUAL_SAES_REPO_ID, filename=FILENAME)
-
-    folder_path = os.path.dirname(path)
-
-    return SparseAutoencoderDictionary.load_from_pretrained(
-            folder_path, device=device
-        )[f"blocks.{layer}.hook_resid_pre"]
+    return SAE.from_pretrained(
+        release="gpt2-small-res-jb",  # see other options in sae_lens/pretrained_saes.yaml
+        sae_id=f"blocks.{layer}.hook_resid_pre",  # won't always be a hook point
+        device=device
+    )[0]
 
 def get_cluster_activations(sparse_sae_activations, sae_neurons_in_cluster, decoder_vecs):
     current_token = None
