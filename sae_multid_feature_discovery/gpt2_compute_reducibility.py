@@ -12,7 +12,7 @@ import argparse
 
 # hopefully this will help with memory fragmentation
 os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "max_split_size_mb:128"
-os.environ["TRANSFORMERS_CACHE"] = "/om/user/ericjm/.cache/"
+# os.environ["TRANSFORMERS_CACHE"] = "/om/user/ericjm/.cache/"
 
 import einops
 import numpy as np
@@ -137,6 +137,7 @@ def get_concentration_probability(x, epsilon, temperature, a, b):
     return P
 
 def get_parameters(x, epsilon=0.1):
+    n = 2
     # Initialize the parameter x
     a = torch.randn(
         [n], requires_grad=True
