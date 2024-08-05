@@ -19,7 +19,7 @@ import numpy as np
 from tqdm import tqdm
 import matplotlib.pyplot as plt
 from huggingface_hub import hf_hub_download
-from sae_lens import SparseAutoencoderDictionary
+from sae_lens import SAE
 # import transformer_lens
 import torch
 from transformers import AutoTokenizer
@@ -32,27 +32,12 @@ import plotly.graph_objects as go
 from utils import BASE_DIR
 
 def get_gpt2_sae(device, layer):
+    return SAE.from_pretrained(
+        release="gpt2-small-res-jb",  # see other options in sae_lens/pretrained_saes.yaml
+        sae_id=f"blocks.{layer}.hook_resid_pre",  # won't always be a hook point
+        device=device
+    )[0]
 
-    if type(device) == int:
-        device = f"cuda:{device}"
-
-    GPT2_SMALL_RESIDUAL_SAES_REPO_ID = "jbloom/GPT2-Small-SAEs-Reformatted"
-    hook_point = f"blocks.{layer}.hook_resid_pre"
-
-    FILENAME = f"{hook_point}/cfg.json"
-    path = hf_hub_download(repo_id=GPT2_SMALL_RESIDUAL_SAES_REPO_ID, filename=FILENAME)
-
-    FILENAME = f"{hook_point}/sae_weights.safetensors"
-    hf_hub_download(repo_id=GPT2_SMALL_RESIDUAL_SAES_REPO_ID, filename=FILENAME)
-
-    FILENAME = f"{hook_point}/sparsity.safetensors"
-    hf_hub_download(repo_id=GPT2_SMALL_RESIDUAL_SAES_REPO_ID, filename=FILENAME)
-
-    folder_path = os.path.dirname(path)
-
-    return SparseAutoencoderDictionary.load_from_pretrained(
-            folder_path, device=device
-        )[f"blocks.{layer}.hook_resid_pre"]
 
 def get_cluster_activations(sparse_sae_activations, sae_neurons_in_cluster, decoder_vecs, threshold=0.0):
     current_token = None
@@ -145,6 +130,42 @@ def get_separability(xy, bins_per_dim, angles):
     return min(mutual_infos), np.array(mutual_infos)
 
 
+def get_concentration_probability(x, epsilon, temperature, a, b):
+    x = torch.tensordot(x, a, dims=1) + b
+    z = x / torch.sqrt(torch.mean(x**2))
+    P = torch.mean(torch.sigmoid((epsilon - torch.abs(z)) / temperature))
+    return P
+
+def get_parameters(x, epsilon=0.1):
+    # Initialize the parameter x
+    a = torch.randn(
+        [n], requires_grad=True
+    )  # Random initialization, requires_grad=True to track gradients
+    b = torch.zeros(
+        [], requires_grad=True
+    )  # Random initialization, requires_grad=True to track gradients
+
+    # Define hyperparameters
+    learning_rate = 0.1
+    num_iterations = 10000
+    #    num_iterations = 100
+
+    # Gradient Descent loop
+    for i in range(num_iterations):
+        temperature = 1 - i / num_iterations
+        # Compute the function value and its gradient
+        P = get_concentration_probability(x, epsilon, temperature, a, b)
+        P.backward()  # Compute gradients
+        with torch.no_grad():
+            # Update x using gradient descent
+            a += learning_rate * a.grad
+            b += learning_rate * b.grad
+
+        # Manually zero the gradients after updating weights
+        a.grad.zero_()
+        b.grad.zero_()
+    return a.detach().numpy(), b.detach().numpy(), P.item()
+
 def save_metrics_and_figures(reconstructions_pca, args):
     metrics = {}
     plt.figure(figsize=(8, reconstructions_pca.shape[1]*2))
@@ -155,46 +176,6 @@ def save_metrics_and_figures(reconstructions_pca, args):
         
         # convert to torch tensor
         x = torch.tensor(x, dtype=torch.float32)
-        
-        batch_size = x.shape[0]
-        n = 2
-
-        ### MIXTURE TESTING
-        def get_concentration_probability(x, epsilon, temperature, a, b):
-            x = torch.tensordot(x, a, dims=1) + b
-            z = x / torch.sqrt(torch.mean(x**2))
-            P = torch.mean(torch.sigmoid((epsilon - torch.abs(z)) / temperature))
-            return P
-
-        def get_parameters(x, epsilon=0.1):
-            # Initialize the parameter x
-            a = torch.randn(
-                [n], requires_grad=True
-            )  # Random initialization, requires_grad=True to track gradients
-            b = torch.zeros(
-                [], requires_grad=True
-            )  # Random initialization, requires_grad=True to track gradients
-
-            # Define hyperparameters
-            learning_rate = 0.1
-            num_iterations = 10000
-            #    num_iterations = 100
-
-            # Gradient Descent loop
-            for i in range(num_iterations):
-                temperature = 1 - i / num_iterations
-                # Compute the function value and its gradient
-                P = get_concentration_probability(x, epsilon, temperature, a, b)
-                P.backward()  # Compute gradients
-                with torch.no_grad():
-                    # Update x using gradient descent
-                    a += learning_rate * a.grad
-                    b += learning_rate * b.grad
-
-                # Manually zero the gradients after updating weights
-                a.grad.zero_()
-                b.grad.zero_()
-            return a.detach().numpy(), b.detach().numpy(), P.item()
 
         ax1 = plt.subplot(reconstructions_pca.shape[1]-1, 3, 3*pcai+1)
         ax2 = plt.subplot(reconstructions_pca.shape[1]-1, 3, 3*pcai+2)
@@ -276,12 +257,6 @@ def save_metrics_and_figures(reconstructions_pca, args):
             "g--",
         )
         axs[2].set_title("$S(\\mathbf{f})=" + str(round(float(mutual_info / np.log(2)), 4)) + "$", color='green')
-        # axs[2].text(
-        #     2 * np.pi * (max_ind / angular_res % 0.25 + offset) + 0.1,
-        #     max(0.05, mutual_info / np.log(2) - 0.3),
-        #     "$S(\\mathbf{f})=" + str(round(float(mutual_info / np.log(2)), 4)) + "$",
-        #     color="green",
-        # )
         axs[2].set_xlabel("angle $\\theta$")
         axs[2].set_ylabel("Mutual info (bits)")
 
