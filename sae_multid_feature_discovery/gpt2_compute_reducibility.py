@@ -105,6 +105,62 @@ def get_pcas(args):
     reconstructions_pca = pca.fit_transform(reconstructions)
     return reconstructions_pca
 
+# def mutual_information(xy_hist, eps=1e-7):
+#     """Computes mutual information from a 2d histogram.
+#     Args:
+#         xy_hist (np.array): contains counts for each bin in 2d
+#     TODO: add epsilons to avoid nans
+#     TODO: test this on some simple examples.
+#     """
+#     joint = xy_hist / np.sum(xy_hist)
+#     marginal_x = np.sum(joint, axis=1)
+#     marginal_y = np.sum(joint, axis=0)
+#     product = np.outer(marginal_x, marginal_y) + eps
+#     mutual_info = np.sum(joint * np.log(joint / product))
+#     print(mutual_info)
+#     return mutual_info
+
+
+def mutual_information(xy_hist, eps=1e-10):
+    """Computes mutual information from a 2d histogram.
+    Args:
+        xy_hist (np.array): contains counts for each bin in 2d
+        eps (float): small value to avoid log(0) and division by zero
+    Returns:
+        float: mutual information
+    """
+    joint = xy_hist / (np.sum(xy_hist) + eps)
+    marginal_x = np.sum(joint, axis=1)
+    marginal_y = np.sum(joint, axis=0)
+    product = np.outer(marginal_x, marginal_y)
+    mask = joint > 0
+    mutual_info = np.sum(joint[mask] * np.log((joint[mask] + eps) / (product[mask] + eps)))
+    return mutual_info
+
+def rotate(xy, angle):
+    """Rotates the cloud of points xy (2d) by `angle` radians.
+    TODO: test this on simple examples
+    """
+    rotation = np.array([[np.cos(angle), -np.sin(angle)], [np.sin(angle), np.cos(angle)]])
+    return np.dot(xy, rotation)
+
+def get_separability(xy, bins_per_dim, angles):
+    """Computes minimum mutual information over rotations of `xy`
+    by `angles`.
+    Args:
+        xy (np.array): shape (d, 2)
+    Returns:
+        (min_mutual_info, mutual_infos)
+    """
+    mutual_infos = []
+    for angle in angles:
+        rotated_xy = rotate(xy, angle)
+        histogram, _, _ = np.histogram2d(rotated_xy[:, 0], rotated_xy[:, 1], bins=bins_per_dim)
+        mutual_info = mutual_information(histogram)
+        mutual_infos.append(mutual_info)
+    return min(mutual_infos), np.array(mutual_infos)
+
+
 def save_metrics_and_figures(reconstructions_pca, args):
     metrics = {}
     plt.figure(figsize=(8, reconstructions_pca.shape[1]*2))
@@ -155,71 +211,6 @@ def save_metrics_and_figures(reconstructions_pca, args):
                 a.grad.zero_()
                 b.grad.zero_()
             return a.detach().numpy(), b.detach().numpy(), P.item()
-
-        ### SEPARABILITY TESTING
-        def bin_(xy, n, bound):
-            xy = torch.clip((xy + bound) / bound * n, 0, 2 * n - 0.1)
-            ints = torch.floor(xy).type(torch.int64)
-            dist = torch.zeros([(2 * n) ** 2])
-            indices = ints[:, 0] * (2 * n) + ints[:, 1]
-            dist.scatter_add_(0, indices, torch.ones(indices.shape, dtype=xy.dtype))
-            dist = torch.reshape(dist, [2 * n, 2 * n])
-            print(f"dist.shape: {dist.shape}")
-            print(f"frac in bins: {dist.sum() / xy.numel()}")
-
-            #    mods = xy % 1
-            #    weightings = 1 - mods
-            #    dist = torch.zeros([(2*n+2)**2])
-            #    indices = ints[:,0]*(2*n+2) + ints[:,1]
-            #    dist.scatter_add_(0, indices, weightings[:,0]*weightings[:,1])
-            #    indices = (ints[:,0]+1)*(2*n+2) + ints[:,1]
-            #    dist.scatter_add_(0, indices, (1-weightings[:,0])*weightings[:,1])
-            #    indices = ints[:,0]*(2*n+2) + (ints[:,1]+1)
-            #    dist.scatter_add_(0, indices, weightings[:,0]*(1-weightings[:,1]))
-            #    indices = (ints[:,0]+1)*(2*n+2) + (ints[:,1]+1)
-            #    dist.scatter_add_(0, indices, (1-weightings[:,0])*(1-weightings[:,1]))
-            #    dist = torch.reshape(dist, [2*n+2, 2*n+2])
-            return dist
-
-        def mutual_info(xy, n, bound):
-            dist = bin_(xy, n, bound)
-            joint = dist / torch.sum(dist)
-            marginal_x = torch.sum(joint, dim=1)
-            marginal_y = torch.sum(joint, dim=0)
-            product = marginal_x[:, None] * marginal_y[None, :]
-            mutual_info = torch.sum(joint * torch.log((joint + 1e-4) / (product + 1e-4)))
-            return mutual_info
-            
-        def optimize_mutual_info(xy, split, n, bound, angular_res):  # xy: n, d
-            d_x = split
-            d_y = xy.shape[1] - split
-            assert d_x == 1 and d_y == 1
-
-            mutual_infos = []
-            for i in range(angular_res):
-                angle = torch.tensor(2 * np.pi * i / angular_res)
-                rotation = torch.cos(angle).type(xy.dtype) * torch.eye(
-                    2, dtype=xy.dtype
-                ) + torch.sin(angle).type(xy.dtype) * torch.tensor(
-                    [[0, -1], [1, 0]], dtype=xy.dtype
-                )
-                minfo = mutual_info(torch.tensordot(xy, rotation, dims=1), n, bound)
-                mutual_infos.append(minfo)
-
-            max_ind = torch.argmin(torch.tensor(mutual_infos), dim=0)
-            angle = 2 * np.pi * max_ind / angular_res
-            rotation = torch.cos(angle).type(xy.dtype) * torch.eye(
-                2, dtype=xy.dtype
-            ) + torch.sin(angle).type(xy.dtype) * torch.tensor(
-                [[0, -1], [1, 0]], dtype=xy.dtype
-            )
-            rot_xy = torch.tensordot(xy, rotation, dims=1)
-            return mutual_infos, max_ind, rotation
-
-        def normalize(x):
-            x = x - torch.mean(x, dim=0)
-            x = x / torch.mean(x**2)
-            return x
 
         ax1 = plt.subplot(reconstructions_pca.shape[1]-1, 3, 3*pcai+1)
         ax2 = plt.subplot(reconstructions_pca.shape[1]-1, 3, 3*pcai+2)
@@ -292,26 +283,30 @@ def save_metrics_and_figures(reconstructions_pca, args):
         print("Mixture index: ", P)
 
         # Separability testing
-        x = normalize(x)
-        xy = x
-        angular_res = 1000
-        n = 20
-        bound = 3
-        mutual_infos, max_ind, net_transform = optimize_mutual_info(
-            xy, 1, n, bound, angular_res
-        )
-        mutual_info = mutual_infos[max_ind]
+        # x = normalize(x)
+        # xy = x
+        # angular_res = 1000
+        # n = 20
+        # bound = 3
+        # mutual_infos, max_ind, net_transform = optimize_mutual_info(
+        #     xy, 1, n, bound, angular_res
+        # )
+        # mutual_info = mutual_infos[max_ind]
 
-        dist = bin_(xy, n, bound)
+        # dist = bin_(xy, n, bound)
+        # compute the separability
+        bins_per_dim = 10
+        angles = np.linspace(0, 2 * np.pi, 100)
+        mutual_info, mutual_infos = get_separability(x_numpy, bins_per_dim, angles)
 
         # axs[0].scatter(xy[:,0], xy[:,1], color='k', s=2)
-        inv_transform = np.linalg.inv(net_transform.numpy())
+        # inv_transform = np.linalg.inv(net_transform.numpy())
         # cross_size = [3, 4, 1.2, 5][dataset_num - 1]
-        cross_size = 2
-        dir_x = cross_size * inv_transform[0, :]
-        dir_y = cross_size * inv_transform[1, :]
-        axs[0].plot([-dir_x[0], dir_x[0]], [-dir_x[1], dir_x[1]], "g")
-        axs[0].plot([-dir_y[0], dir_y[0]], [-dir_y[1], dir_y[1]], "g")
+        # cross_size = 2
+        # dir_x = cross_size * inv_transform[0, :]
+        # dir_y = cross_size * inv_transform[1, :]
+        # axs[0].plot([-dir_x[0], dir_x[0]], [-dir_x[1], dir_x[1]], "g")
+        # axs[0].plot([-dir_y[0], dir_y[0]], [-dir_y[1], dir_y[1]], "g")
 
         print("Separability index: ", mutual_info)
 
@@ -326,15 +321,17 @@ def save_metrics_and_figures(reconstructions_pca, args):
         axs[0].tick_params(axis="y", which="both", left=False, right=False, labelleft=False)
 
         axs[2].plot(
-            2 * np.pi * np.arange(angular_res) / angular_res,
-            [minfo.numpy() / np.log(2) for minfo in mutual_infos],
+            angles,
+            mutual_infos / np.log(2),
             "g",
         )
-        offset = 0.0 if max_ind / angular_res % 0.25 > 0.1 else 0.25
+        # offset = 0.0 if max_ind / angular_res % 0.25 > 0.1 else 0.25
+        offset = 0
+        min_ind = np.argmin(mutual_infos)
         axs[2].plot(
             [
-                2 * np.pi * (max_ind / angular_res % 0.25 + offset),
-                2 * np.pi * (max_ind / angular_res % 0.25 + offset),
+                angles[min_ind] + offset,
+                angles[min_ind] + offset,
             ],
             [0, mutual_info / np.log(2)],
             "g--",
@@ -360,7 +357,7 @@ def save_metrics_and_figures(reconstructions_pca, args):
         axs[2].spines["bottom"].set_position(("data", 0))
 
         axs[2].set_xlim((0, 2 * np.pi))
-        axs[2].set_ylim((0, np.max([minfo.numpy() / np.log(2) for minfo in mutual_infos])))
+        axs[2].set_ylim((0, np.max(mutual_infos / np.log(2))))
 
         ticks = [0, np.pi / 2, np.pi, 3 * np.pi / 2, 2 * np.pi]
         axs[2].set_xticks(ticks)
