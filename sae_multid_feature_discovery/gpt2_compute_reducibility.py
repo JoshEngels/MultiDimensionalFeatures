@@ -140,7 +140,7 @@ def get_mixture_subspace_params(xy, epsilon):
     a = torch.randn([2], requires_grad=True)
     b = torch.zeros([], requires_grad=True)
 
-    learning_rate = 0.1
+    learning_rate = 0.01
     num_iterations = 10000
 
     # Gradient descent loop
@@ -188,7 +188,7 @@ def save_metrics_and_figures(reconstructions_pca, args):
         eps = epsilon * np.sqrt(np.mean(proj_x**2))
         z = proj_x / np.sqrt(np.mean(proj_x**2))
         percent_within_epsilon = np.mean(np.abs(z) < epsilon)
-        
+
         axs[1].hist(z, bins=100, color="k")
         axs[1].axvline(x=-epsilon, color="red", linestyle=(0, (5, 5)))
         axs[1].axvline(x=epsilon, color="red", linestyle=(0, (5, 5)))
