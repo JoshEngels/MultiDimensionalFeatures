@@ -105,22 +105,6 @@ def get_pcas(args):
     reconstructions_pca = pca.fit_transform(reconstructions)
     return reconstructions_pca
 
-# def mutual_information(xy_hist, eps=1e-7):
-#     """Computes mutual information from a 2d histogram.
-#     Args:
-#         xy_hist (np.array): contains counts for each bin in 2d
-#     TODO: add epsilons to avoid nans
-#     TODO: test this on some simple examples.
-#     """
-#     joint = xy_hist / np.sum(xy_hist)
-#     marginal_x = np.sum(joint, axis=1)
-#     marginal_y = np.sum(joint, axis=0)
-#     product = np.outer(marginal_x, marginal_y) + eps
-#     mutual_info = np.sum(joint * np.log(joint / product))
-#     print(mutual_info)
-#     return mutual_info
-
-
 def mutual_information(xy_hist, eps=1e-10):
     """Computes mutual information from a 2d histogram.
     Args:
@@ -235,27 +219,7 @@ def save_metrics_and_figures(reconstructions_pca, args):
         axs[1].axvline(x=epsilon, color="red", linestyle=(0, (5, 5)))
         axs[1].set_xlabel("normalized $\\mathbf{v} \\cdot \\mathbf{f} + c$")
         axs[1].set_ylabel("count")
-        # if dataset_num == 1:
-        #     height = 65
-        #     xpos = -3.8
-        # if dataset_num == 2:
-        #     height = 500
-        #     xpos = 0.4
-        # if dataset_num == 3:
-        #     height = 150
-        #     xpos = -1.1
-        # if dataset_num == 4:
-        #     height = 700
-        #     xpos = 0.4
-        # xpos = 0.5
-        # height = 150
         axs[1].set_title("$M_\\epsilon(\\mathbf{f})=" + str(round(float(P), 4)) + "$", color='red')
-        # axs[1].text(
-        #     xpos,
-        #     height,
-        #     "$M_\\epsilon(\\mathbf{f})=" + str(round(float(P), 4)) + "$",
-        #     color="red",
-        # )
         axs[1].spines[["top", "left", "right"]].set_visible(False)
         axs[1].grid(axis="y")
 
@@ -275,38 +239,13 @@ def save_metrics_and_figures(reconstructions_pca, args):
             color="red",
             linestyle=(0, (5, 5)),
         )
-
-        # axs[0].axis("equal")
-        # axs[0].set_xlabel("representation dim 1")
-        # axs[0].set_ylabel("representation dim 2")
-
         print("Mixture index: ", P)
 
         # Separability testing
-        # x = normalize(x)
-        # xy = x
-        # angular_res = 1000
-        # n = 20
-        # bound = 3
-        # mutual_infos, max_ind, net_transform = optimize_mutual_info(
-        #     xy, 1, n, bound, angular_res
-        # )
-        # mutual_info = mutual_infos[max_ind]
-
-        # dist = bin_(xy, n, bound)
-        # compute the separability
         bins_per_dim = 10
         angles = np.linspace(0, 2 * np.pi, 100)
         mutual_info, mutual_infos = get_separability(x_numpy, bins_per_dim, angles)
 
-        # axs[0].scatter(xy[:,0], xy[:,1], color='k', s=2)
-        # inv_transform = np.linalg.inv(net_transform.numpy())
-        # cross_size = [3, 4, 1.2, 5][dataset_num - 1]
-        # cross_size = 2
-        # dir_x = cross_size * inv_transform[0, :]
-        # dir_y = cross_size * inv_transform[1, :]
-        # axs[0].plot([-dir_x[0], dir_x[0]], [-dir_x[1], dir_x[1]], "g")
-        # axs[0].plot([-dir_y[0], dir_y[0]], [-dir_y[1], dir_y[1]], "g")
 
         print("Separability index: ", mutual_info)
 
@@ -384,178 +323,6 @@ def main(args):
     reconstructions_pca = get_pcas(args)
     save_metrics_and_figures(reconstructions_pca, args)
 
-    # for pcai in range(min(5, len(cluster))-1):
-    #     x = reconstructions_pca[:, pcai:pcai+2]
-    #     # convert to torch tensor
-    #     x = torch.tensor(x, dtype=torch.float32)
-        
-    #     batch_size = x.shape[0]
-    #     n = 2
-
-    #     ### MIXTURE TESTING
-    #     def get_concentration_probability(x, epsilon, temperature, a, b):
-    #         x = torch.tensordot(x, a, dims=1) + b
-    #         z = x / torch.sqrt(torch.mean(x**2))
-    #         P = torch.mean(torch.sigmoid((epsilon - torch.abs(z)) / temperature))
-    #         return P
-
-    #     def get_parameters(x, epsilon=0.1):
-    #         # Initialize the parameter x
-    #         a = torch.randn(
-    #             [n], requires_grad=True
-    #         )  # Random initialization, requires_grad=True to track gradients
-    #         b = torch.zeros(
-    #             [], requires_grad=True
-    #         )  # Random initialization, requires_grad=True to track gradients
-
-    #         # Define hyperparameters
-    #         learning_rate = 0.1
-    #         num_iterations = 10000
-    #         #    num_iterations = 100
-
-    #         # Gradient Descent loop
-    #         for i in range(num_iterations):
-    #             temperature = 1 - i / num_iterations
-    #             # Compute the function value and its gradient
-    #             P = get_concentration_probability(x, epsilon, temperature, a, b)
-    #             P.backward()  # Compute gradients
-    #             with torch.no_grad():
-    #                 # Update x using gradient descent
-    #                 a += learning_rate * a.grad
-    #                 b += learning_rate * b.grad
-
-    #             # Manually zero the gradients after updating weights
-    #             a.grad.zero_()
-    #             b.grad.zero_()
-    #         return a.detach().numpy(), b.detach().numpy(), P.item()
-
-    #     ### SEPARABILITY TESTING
-    #     def bin_(xy, n, bound):
-    #         xy = torch.clip((xy + bound) / bound * n, 0, 2 * n - 0.1)
-    #         ints = torch.floor(xy).type(torch.int64)
-    #         dist = torch.zeros([(2 * n) ** 2])
-    #         indices = ints[:, 0] * (2 * n) + ints[:, 1]
-    #         dist.scatter_add_(0, indices, torch.ones(indices.shape, dtype=xy.dtype))
-    #         dist = torch.reshape(dist, [2 * n, 2 * n])
-
-    #         #    mods = xy % 1
-    #         #    weightings = 1 - mods
-    #         #    dist = torch.zeros([(2*n+2)**2])
-    #         #    indices = ints[:,0]*(2*n+2) + ints[:,1]
-    #         #    dist.scatter_add_(0, indices, weightings[:,0]*weightings[:,1])
-    #         #    indices = (ints[:,0]+1)*(2*n+2) + ints[:,1]
-    #         #    dist.scatter_add_(0, indices, (1-weightings[:,0])*weightings[:,1])
-    #         #    indices = ints[:,0]*(2*n+2) + (ints[:,1]+1)
-    #         #    dist.scatter_add_(0, indices, weightings[:,0]*(1-weightings[:,1]))
-    #         #    indices = (ints[:,0]+1)*(2*n+2) + (ints[:,1]+1)
-    #         #    dist.scatter_add_(0, indices, (1-weightings[:,0])*(1-weightings[:,1]))
-    #         #    dist = torch.reshape(dist, [2*n+2, 2*n+2])
-    #         return dist
-
-    #     def mutual_info(xy, n, bound):
-    #         dist = bin_(xy, n, bound)
-    #         joint = dist / torch.sum(dist)
-    #         marginal_x = torch.sum(joint, dim=1)
-    #         marginal_y = torch.sum(joint, dim=0)
-    #         product = marginal_x[:, None] * marginal_y[None, :]
-    #         mutual_info = torch.sum(joint * torch.log((joint + 1e-4) / (product + 1e-4)))
-    #         return mutual_info
-            
-    #     def optimize_mutual_info(xy, split, n, bound, angular_res):  # xy: n, d
-    #         d_x = split
-    #         d_y = xy.shape[1] - split
-    #         assert d_x == 1 and d_y == 1
-
-    #         mutual_infos = []
-    #         for i in range(angular_res):
-    #             angle = torch.tensor(2 * np.pi * i / angular_res)
-    #             rotation = torch.cos(angle).type(xy.dtype) * torch.eye(
-    #                 2, dtype=xy.dtype
-    #             ) + torch.sin(angle).type(xy.dtype) * torch.tensor(
-    #                 [[0, -1], [1, 0]], dtype=xy.dtype
-    #             )
-    #             minfo = mutual_info(torch.tensordot(xy, rotation, dims=1), n, bound)
-    #             mutual_infos.append(minfo)
-
-    #         max_ind = torch.argmin(torch.tensor(mutual_infos), dim=0)
-    #         angle = 2 * np.pi * max_ind / angular_res
-    #         rotation = torch.cos(angle).type(xy.dtype) * torch.eye(
-    #             2, dtype=xy.dtype
-    #         ) + torch.sin(angle).type(xy.dtype) * torch.tensor(
-    #             [[0, -1], [1, 0]], dtype=xy.dtype
-    #         )
-    #         rot_xy = torch.tensordot(xy, rotation, dims=1)
-    #         return mutual_infos, max_ind, rotation
-
-    #     def normalize(x):
-    #         x = x - torch.mean(x, dim=0)
-    #         x = x / torch.mean(x**2)
-    #         return x
-
-    #     # Mixture testing
-    #     epsilon = 0.01
-    #     a, b, P = get_parameters(x, epsilon)
-
-    #     x_numpy = x.numpy()
-
-    #     a_norm = np.sqrt(np.sum(a**2))
-    #     normalized_a = a / a_norm
-
-    #     proj_x = (np.tensordot(x_numpy, a, axes=1) + b) / a_norm
-    #     eps = epsilon * np.sqrt(np.mean(proj_x**2))
-
-    #     z = proj_x / np.sqrt(np.mean(proj_x**2))
-
-    #     b_norm = b / a_norm
-    #     b = normalized_a * b_norm
-
-    #     # Separability testing
-    #     x = normalize(x)
-    #     xy = x
-    #     angular_res = 1000
-    #     n = 20
-    #     bound = 3
-    #     mutual_infos, max_ind, net_transform = optimize_mutual_info(
-    #         xy, 1, n, bound, angular_res
-    #     )
-    #     mutual_info = mutual_infos[max_ind]
-
-    #     dist = bin_(xy, n, bound)
-
-    #     # axs[0].scatter(xy[:,0], xy[:,1], color='k', s=2)
-    #     # inv_transform = np.linalg.inv(net_transform.numpy())
-    #     # cross_size = [3, 4, 1.2, 5][dataset_num - 1]
-    #     # dir_x = cross_size * inv_transform[0, :]
-    #     # dir_y = cross_size * inv_transform[1, :]
-    #     # print("P type:", type(P))
-    #     # print("mutual_info type:", type(mutual_info))
-
-    #     metrics[f"{pcai}-{pcai+1}"] = {"mixture_index": P, "separability_index": (mutual_info / np.log(2)).item()}
-
-
-    #     # fig.add_trace(go.Scatter(x=reconstructions_pca[:, pcai], y=reconstructions_pca[:, pcai+1],
-    #     #                         mode='markers', marker=dict(color='darkblue', opacity=0.5), text=contexts_str,
-    #     #                         hoverinfo='text',
-    #     #                         hoverlabel=dict(bgcolor='white', font=dict(color='black'), bordercolor='black'),
-    #     #                         showlegend=False),
-    #     #             row=2, col=pcai+1)
-    #     # fig.update_xaxes(title_text=f"PCA dim {pcai}", row=2, col=pcai+1)
-    #     # fig.update_yaxes(title_text=f"PCA dim {pcai+1}", row=2, col=pcai+1)
-    #     # fig.update_yaxes(title_standoff=0, row=2, col=pcai+1)
-    
-    # # save metrics to a file in args.save_dir as json
-    # # save to  os.path.join(args.save_dir, f"gpt2-layer{args.layer}-cluster{args.cluster}-sep-metrics.json")
-    # with open(os.path.join(args.save_dir, f"gpt2-layer{args.layer}-cluster{args.cluster}-sep-metrics.json"), "w") as f:
-    #     json.dump(metrics, f)
-
-    # # fig.update_layout(height=800, width=1200, title_text=f"Cluster rank {args.cluster} with {len(cluster)} features",
-    # #                 font=dict(size=12))  # Adjust the main title font size here
-    # #                 #   subplot_titles_font=dict(size=8))  # Adjust the subplot title font size here
-    # # fig.update_annotations(font_size=13)
-
-    # # fig.write_html(os.path.join(args.save_dir, f"gpt2-layer{args.layer}-cluster{args.cluster}.html"))
-    # # fig.write_image(os.path.join(args.save_dir, f"gpt2-layer{args.layer}-cluster{args.cluster}.png"))
-        
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(description="Create cluster figure")
