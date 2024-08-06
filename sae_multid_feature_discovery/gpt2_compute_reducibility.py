@@ -3,9 +3,10 @@ For a given layer and cluster, computes the PCAs of the reconstructed
 activations of that cluster, and computes our
 reducibility metrics, \epsilon-mixture and separability.
 """
+# %%
 
 import os
-import time
+import einops
 import pickle
 import json
 import argparse
@@ -68,7 +69,7 @@ def get_cluster_activations(sparse_sae_activations, sae_neurons_in_cluster, deco
 def get_pcas(args):
 
     ae = get_gpt2_sae(device="cpu", layer=args.layer)
-    decoder_vecs = ae.W_dec.data.cpu().numpy()
+    decoder_vecs = ae.W_dec.data.detach().cpu().numpy()
     tokenizer = AutoTokenizer.from_pretrained("gpt2")
 
     # load up clusters
@@ -130,33 +131,24 @@ def get_separability(xy, bins_per_dim, angles):
     return min(mutual_infos), np.array(mutual_infos)
 
 
-def get_concentration_probability(x, epsilon, temperature, a, b):
-    x = torch.tensordot(x, a, dims=1) + b
-    z = x / torch.sqrt(torch.mean(x**2))
-    P = torch.mean(torch.sigmoid((epsilon - torch.abs(z)) / temperature))
-    return P
+def get_projection_loss(xy, epsilon, a, b):
+    projections = einops.einsum(xy, a, "batch dim, dim -> batch") + b
+    z = projections / torch.sqrt(torch.mean(projections**2))
+    return torch.mean(torch.sigmoid((epsilon - torch.abs(z))))
 
-def get_parameters(x, epsilon=0.1):
-    n = 2
-    # Initialize the parameter x
-    a = torch.randn(
-        [n], requires_grad=True
-    )  # Random initialization, requires_grad=True to track gradients
-    b = torch.zeros(
-        [], requires_grad=True
-    )  # Random initialization, requires_grad=True to track gradients
+def get_mixture_subspace_params(xy, epsilon):
+    xy = torch.tensor(xy, dtype=torch.float32)
+    a = torch.randn([2], requires_grad=True)
+    b = torch.zeros([], requires_grad=True)
 
-    # Define hyperparameters
     learning_rate = 0.1
     num_iterations = 10000
-    #    num_iterations = 100
 
-    # Gradient Descent loop
-    for i in range(num_iterations):
-        temperature = 1 - i / num_iterations
+    # Gradient descent loop
+    for i in tqdm(range(num_iterations)):
         # Compute the function value and its gradient
-        P = get_concentration_probability(x, epsilon, temperature, a, b)
-        P.backward()  # Compute gradients
+        loss = get_projection_loss(xy, epsilon, a, b)
+        loss.backward()  # Compute gradients
         with torch.no_grad():
             # Update x using gradient descent
             a += learning_rate * a.grad
@@ -165,50 +157,52 @@ def get_parameters(x, epsilon=0.1):
         # Manually zero the gradients after updating weights
         a.grad.zero_()
         b.grad.zero_()
-    return a.detach().numpy(), b.detach().numpy(), P.item()
+
+    return a.detach().numpy(), b.detach().numpy()
 
 def save_metrics_and_figures(reconstructions_pca, args):
+    """
+    reconstructions_pca (np.array): PCA of the cluster reconstructions
+    """
     metrics = {}
     plt.figure(figsize=(8, reconstructions_pca.shape[1]*2))
     for pcai in range(reconstructions_pca.shape[1]-1):
-        x = reconstructions_pca[:, pcai:pcai+2]
-        # filter out points in x that are below the radius
-        x = x[np.linalg.norm(x, axis=1) > args.radius]
-        
-        # convert to torch tensor
-        x = torch.tensor(x, dtype=torch.float32)
+        xy = reconstructions_pca[:, pcai:pcai+2]
+
+        # Trim points within a radius
+        xy = xy[np.linalg.norm(xy, axis=1) > args.radius]
 
         ax1 = plt.subplot(reconstructions_pca.shape[1]-1, 3, 3*pcai+1)
         ax2 = plt.subplot(reconstructions_pca.shape[1]-1, 3, 3*pcai+2)
         ax3 = plt.subplot(reconstructions_pca.shape[1]-1, 3, 3*pcai+3)
         axs = [ax1, ax2, ax3]
 
-        # Mixture testing
-        epsilon = 0.1
-        a, b, P = get_parameters(x, epsilon)
-
-        x_numpy = x.numpy()
+        # ---------- Mixture testing ---------- 
+        epsilon = args.epsilon
+        a, b = get_mixture_subspace_params(xy, epsilon)
 
         a_norm = np.sqrt(np.sum(a**2))
-        normalized_a = a / a_norm
+        normalized_a = a 
 
-        proj_x = (np.tensordot(x_numpy, a, axes=1) + b) / a_norm
+        proj_x = (np.tensordot(xy, a, axes=1) + b) / a_norm
         eps = epsilon * np.sqrt(np.mean(proj_x**2))
-
         z = proj_x / np.sqrt(np.mean(proj_x**2))
-        axs[1].hist(z, bins=100, color="k")
-        axs[1].axvline(x=-epsilon, color="red", linestyle=(0, (5, 5)))
-        axs[1].axvline(x=epsilon, color="red", linestyle=(0, (5, 5)))
-        axs[1].set_xlabel("normalized $\\mathbf{v} \\cdot \\mathbf{f} + c$")
-        axs[1].set_ylabel("count")
-        axs[1].set_title("$M_\\epsilon(\\mathbf{f})=" + str(round(float(P), 4)) + "$", color='red')
-        axs[1].spines[["top", "left", "right"]].set_visible(False)
-        axs[1].grid(axis="y")
+        percent_within_epsilon = np.mean(np.abs(z) < epsilon)
+        print("Mixture index: ", percent_within_epsilon)
 
+        # ----------  Separability testing ----------
+        bins_per_dim = 10
+        angles = np.linspace(0, 2 * np.pi, 100)
+        mutual_info, mutual_infos = get_separability(xy, bins_per_dim, angles)
+
+        print("Separability index: ", mutual_info)
+
+    
+        # ---------- Plot 0 ----------
         b_norm = b / a_norm
         b = normalized_a * b_norm
 
-        axs[0].scatter(x_numpy[:, 0], x_numpy[:, 1], color="k", s=2)
+        axs[0].scatter(xy[:, 0], xy[:, 1], color="k", s=2)
         axs[0].axline(
             -b + eps * normalized_a[:2],
             slope=-a[0] / a[1],
@@ -221,15 +215,6 @@ def save_metrics_and_figures(reconstructions_pca, args):
             color="red",
             linestyle=(0, (5, 5)),
         )
-        print("Mixture index: ", P)
-
-        # Separability testing
-        bins_per_dim = 10
-        angles = np.linspace(0, 2 * np.pi, 100)
-        mutual_info, mutual_infos = get_separability(x_numpy, bins_per_dim, angles)
-
-
-        print("Separability index: ", mutual_info)
 
         axs[0].axis("equal")
         axs[0].set_xlabel(f"PCA dim {pcai}")
@@ -241,6 +226,19 @@ def save_metrics_and_figures(reconstructions_pca, args):
         )
         axs[0].tick_params(axis="y", which="both", left=False, right=False, labelleft=False)
 
+
+        # ---------- Plot 1 ----------
+        axs[1].hist(z, bins=100, color="k")
+        axs[1].axvline(x=-epsilon, color="red", linestyle=(0, (5, 5)))
+        axs[1].axvline(x=epsilon, color="red", linestyle=(0, (5, 5)))
+        axs[1].set_xlabel("normalized $\\mathbf{v} \\cdot \\mathbf{f} + c$")
+        axs[1].set_ylabel("count")
+        axs[1].set_title("$M_\\epsilon(\\mathbf{f})=" + str(round(float(percent_within_epsilon), 4)) + "$", color='red')
+        axs[1].spines[["top", "left", "right"]].set_visible(False)
+        axs[1].grid(axis="y")
+
+
+        # ---------- Plot 2 ----------
         axs[2].plot(
             angles,
             mutual_infos / np.log(2),
@@ -279,7 +277,7 @@ def save_metrics_and_figures(reconstructions_pca, args):
         labels = ["0", "$\\frac{\\pi}{2}$", "$\\pi$", "$\\frac{3\\pi}{2}$", "$2\\pi$"]
         axs[2].set_xticklabels(labels)
 
-        metrics[f"{pcai}-{pcai+1}"] = {"mixture_index": P, "separability_index": (mutual_info / np.log(2)).item()}
+        metrics[f"{pcai}-{pcai+1}"] = {"mixture_index": percent_within_epsilon, "separability_index": (mutual_info / np.log(2)).item()}
     
     # save metrics and figures
     plt.tight_layout()
@@ -289,7 +287,8 @@ def save_metrics_and_figures(reconstructions_pca, args):
     # save metrics to a file in args.save_dir as json
     with open(os.path.join(args.save_dir, f"gpt2-layer{args.layer}-cluster{args.cluster}-threshold{args.threshold}-radius{args.radius}-metrics.json"), "w") as f:
         json.dump(metrics, f)
-    
+
+# %%
 
 def main(args):
     """
@@ -311,6 +310,7 @@ if __name__ == '__main__':
     parser.add_argument("--sample_limit", type=int, help="Max number of reconstructions in plot", default=20_000)
     parser.add_argument("--threshold", type=float, help="Threshold for activations", default=0.0)
     parser.add_argument("--radius", type=float, help="Exclude points in plane below this radius", default=0.0)
+    parser.add_argument("--epsilon", type=float, help="Epsilon for mixture index", default=0.1)
     parser.add_argument("--save_dir", type=str, help="Directory to save figures", default="metrics")
     args = parser.parse_args()
 
