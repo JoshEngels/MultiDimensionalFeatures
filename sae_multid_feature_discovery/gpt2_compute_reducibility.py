@@ -3,6 +3,7 @@ For a given layer and cluster, computes the PCAs of the reconstructed
 activations of that cluster, and computes our
 reducibility metrics, \epsilon-mixture and separability.
 """
+# %%
 
 import os
 import einops
@@ -130,24 +131,23 @@ def get_separability(xy, bins_per_dim, angles):
     return min(mutual_infos), np.array(mutual_infos)
 
 
-def get_projection_loss(xy, epsilon, temperature, a, b):
+def get_projection_loss(xy, epsilon, a, b):
     projections = einops.einsum(xy, a, "batch dim, dim -> batch") + b
     z = projections / torch.sqrt(torch.mean(projections**2))
-    return torch.mean(torch.sigmoid((epsilon - torch.abs(z)) / temperature))
+    return torch.mean(torch.sigmoid((epsilon - torch.abs(z))))
 
 def get_mixture_subspace_params(xy, epsilon):
     xy = torch.tensor(xy, dtype=torch.float32)
     a = torch.randn([2], requires_grad=True)
     b = torch.zeros([], requires_grad=True)
 
-    learning_rate = 0.01
+    learning_rate = 0.1
     num_iterations = 10000
 
     # Gradient descent loop
-    for i in range(num_iterations):
-        temperature = 1 - i / num_iterations
+    for i in tqdm(range(num_iterations)):
         # Compute the function value and its gradient
-        loss = get_projection_loss(xy, epsilon, temperature, a, b)
+        loss = get_projection_loss(xy, epsilon, a, b)
         loss.backward()  # Compute gradients
         with torch.no_grad():
             # Update x using gradient descent
@@ -188,16 +188,17 @@ def save_metrics_and_figures(reconstructions_pca, args):
         eps = epsilon * np.sqrt(np.mean(proj_x**2))
         z = proj_x / np.sqrt(np.mean(proj_x**2))
         percent_within_epsilon = np.mean(np.abs(z) < epsilon)
+        print("Mixture index: ", percent_within_epsilon)
 
-        axs[1].hist(z, bins=100, color="k")
-        axs[1].axvline(x=-epsilon, color="red", linestyle=(0, (5, 5)))
-        axs[1].axvline(x=epsilon, color="red", linestyle=(0, (5, 5)))
-        axs[1].set_xlabel("normalized $\\mathbf{v} \\cdot \\mathbf{f} + c$")
-        axs[1].set_ylabel("count")
-        axs[1].set_title("$M_\\epsilon(\\mathbf{f})=" + str(round(float(percent_within_epsilon), 4)) + "$", color='red')
-        axs[1].spines[["top", "left", "right"]].set_visible(False)
-        axs[1].grid(axis="y")
+        # ----------  Separability testing ----------
+        bins_per_dim = 10
+        angles = np.linspace(0, 2 * np.pi, 100)
+        mutual_info, mutual_infos = get_separability(xy, bins_per_dim, angles)
 
+        print("Separability index: ", mutual_info)
+
+    
+        # ---------- Plot 0 ----------
         b_norm = b / a_norm
         b = normalized_a * b_norm
 
@@ -214,14 +215,6 @@ def save_metrics_and_figures(reconstructions_pca, args):
             color="red",
             linestyle=(0, (5, 5)),
         )
-        print("Mixture index: ", percent_within_epsilon)
-
-        # Separability testing
-        bins_per_dim = 10
-        angles = np.linspace(0, 2 * np.pi, 100)
-        mutual_info, mutual_infos = get_separability(xy, bins_per_dim, angles)
-
-        print("Separability index: ", mutual_info)
 
         axs[0].axis("equal")
         axs[0].set_xlabel(f"PCA dim {pcai}")
@@ -233,6 +226,19 @@ def save_metrics_and_figures(reconstructions_pca, args):
         )
         axs[0].tick_params(axis="y", which="both", left=False, right=False, labelleft=False)
 
+
+        # ---------- Plot 1 ----------
+        axs[1].hist(z, bins=100, color="k")
+        axs[1].axvline(x=-epsilon, color="red", linestyle=(0, (5, 5)))
+        axs[1].axvline(x=epsilon, color="red", linestyle=(0, (5, 5)))
+        axs[1].set_xlabel("normalized $\\mathbf{v} \\cdot \\mathbf{f} + c$")
+        axs[1].set_ylabel("count")
+        axs[1].set_title("$M_\\epsilon(\\mathbf{f})=" + str(round(float(percent_within_epsilon), 4)) + "$", color='red')
+        axs[1].spines[["top", "left", "right"]].set_visible(False)
+        axs[1].grid(axis="y")
+
+
+        # ---------- Plot 2 ----------
         axs[2].plot(
             angles,
             mutual_infos / np.log(2),
@@ -281,7 +287,8 @@ def save_metrics_and_figures(reconstructions_pca, args):
     # save metrics to a file in args.save_dir as json
     with open(os.path.join(args.save_dir, f"gpt2-layer{args.layer}-cluster{args.cluster}-threshold{args.threshold}-radius{args.radius}-metrics.json"), "w") as f:
         json.dump(metrics, f)
-    
+
+# %%
 
 def main(args):
     """
