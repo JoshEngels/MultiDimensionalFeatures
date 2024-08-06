@@ -10,27 +10,6 @@ torch.set_grad_enabled(False)
 
 # %%
 
-# tokenizer = AutoTokenizer.from_pretrained(
-#     "NousResearch/Meta-Llama-3.1-8B", cache_dir="/media/MODELS"
-# )
-
-# model = AutoModelForCausalLM.from_pretrained(
-#     "NousResearch/Meta-Llama-3.1-8B",
-#     device_map="auto",
-#     cache_dir="/media/MODELS",
-# )
-
-
-# tokenizer = AutoTokenizer.from_pretrained(
-#     "NousResearch/Meta-Llama-3.1-70B", cache_dir="/media/MODELS"
-# )
-
-# model = AutoModelForCausalLM.from_pretrained(
-#     "NousResearch/Meta-Llama-3.1-70B",
-#     device_map="auto",
-#     load_in_8bit = True,
-#     cache_dir="/media/MODELS",
-# )
 
 tokenizer = AutoTokenizer.from_pretrained(
     "mistralai/Mistral-7B-v0.1"
