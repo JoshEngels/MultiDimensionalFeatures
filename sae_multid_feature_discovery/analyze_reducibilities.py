@@ -21,46 +21,56 @@ for threshold, radius in [(0, 0)]:
 
     mixure_bottom_floor = 0.01
 
-    good_cluster_ids = []
-    good_cluster_values = []
+    good_cluster_ids_ungrouped = []
+    good_cluster_values_ungrouped = []
     for cluster_id, cluster_meta in enumerate(cluster_metas):
         if cluster_meta is None:
             continue
         for key, metrics in cluster_meta.items():
             if metrics["mixture_index"] < mixure_bottom_floor:
                 continue
-            good_cluster_ids.append((cluster_id, key))
-            good_cluster_values.append((metrics["mixture_index"], metrics["separability_index"]))        
+            good_cluster_ids_ungrouped.append((cluster_id, key))
+            good_cluster_values_ungrouped.append((metrics["mixture_index"], metrics["separability_index"]))        
 
+    good_cluster_ids_grouped = {}
+    for i in range(len(good_cluster_ids_ungrouped)):
+        cluster_id, key = good_cluster_ids_ungrouped[i]
+        if cluster_id not in good_cluster_ids_grouped:
+            good_cluster_ids_grouped[cluster_id] = ([], [])
+        good_cluster_ids_grouped[cluster_id][0].append(good_cluster_values_ungrouped[i][0])
+        good_cluster_ids_grouped[cluster_id][1].append(good_cluster_values_ungrouped[i][1])
 
-    plt.scatter(*zip(*good_cluster_values))
+    # Take mean of each cluster
+    good_cluster_ids = []
+    good_cluster_values = []
+    good_cluster_id_to_value = {}
+    for cluster_id, (mixture_indices, separability_indices) in good_cluster_ids_grouped.items():
+        good_cluster_ids.append(cluster_id)
+        if cluster_id == 251:
+            print(separability_indices)
+        good_cluster_values.append((np.mean(mixture_indices), np.mean(separability_indices)))
+        good_cluster_id_to_value[cluster_id] = (np.mean(mixture_indices), np.mean(separability_indices))
+
+    plt.scatter(*zip(*good_cluster_values), color="grey", alpha=0.3)
     plt.xlabel("Mixture Index")
     plt.ylabel("Separability Index")
     plt.gca().invert_xaxis()
-    plt.title(f"Threshold {threshold}, Radius {radius}")
+    plt.title("GPT-2 Mixture Index vs Separability Index")
 
-    # plot_in_orange = [67, 109, 134, 138, 157, 180, 212, 213, 223, 251, 285]
-    plot_in_orange = [138, 157, 251]
-    for cluster_id, key in good_cluster_ids:
-        if cluster_id in plot_in_orange:
-            plt.scatter(
-                cluster_metas[cluster_id][key]["mixture_index"],
-                cluster_metas[cluster_id][key]["separability_index"],
-                color="orange",
-            )
-            plt.text(
-                cluster_metas[cluster_id][key]["mixture_index"],
-                cluster_metas[cluster_id][key]["separability_index"],
-                f"{cluster_id}: {key}",
-                fontsize=9,
-            )
+    special_to_plot = [138, 251, 212]
+    names_to_plot = ["Weekdays cluster", "Months cluster", "Years cluster"]
+    
+    for cluster_id, name in zip(good_cluster_ids_grouped, names_to_plot):
+        cluster_value = good_cluster_id_to_value[cluster_id]
+        plt.text(cluster_value[0], cluster_value[1], name, fontsize=12)
+        plt.scatter(*cluster_value, color="orange")
 
     plt.show()
 
 
     # Rank clusters by max (1 - mixture_index) * separability_index)
     cluster_values = {i: [0] for i in range(1000)}
-    for cluster_id, key in good_cluster_ids:
+    for cluster_id, key in good_cluster_ids_ungrouped:
         cluster_values[cluster_id].append(
             (1 - cluster_metas[cluster_id][key]["mixture_index"])
             * cluster_metas[cluster_id][key]["separability_index"],
@@ -71,7 +81,7 @@ for threshold, radius in [(0, 0)]:
     # Sort cluster ids by cluster values
     cluster_ids = range(1000)
     cluster_ids = sorted(cluster_ids, key=lambda x: cluster_values[x], reverse=True)
-    print([cluster_ids.index(i) for i in plot_in_orange])
+    print([cluster_ids.index(i) for i in special_to_plot])
 
     print(cluster_ids[:20])
 # %%
