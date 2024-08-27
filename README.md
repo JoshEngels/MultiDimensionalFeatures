@@ -10,7 +10,7 @@ Below are instructions to reproduce each figure (aspirationally).
 
 The required pthon packages to run this repo are
 ```
-transformer_lens sae_lens transformers datasets torch adjustText circuitsvis
+transformer_lens sae_lens transformers datasets torch adjustText circuitsvis ipython
 ```
 We recommend you creat a new python venv named multid and install these packages,
 either manually using pip or using the existing requirements.txt if you are on a linux
@@ -19,7 +19,7 @@ machine with Cuda 12.1:
 python -m venv multid
 pip install -r requirements.txt 
 OR
-pip install transformer_lens sae_lens transformers datasets torch adjustText circuitsvis
+pip install transformer_lens sae_lens transformers datasets torch adjustText circuitsvis ipython
 ```
 Let us know if anything does not work with this environment!
 
