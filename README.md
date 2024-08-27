@@ -10,7 +10,7 @@ Below are instructions to reproduce each figure (aspirationally).
 
 The required pthon packages to run this repo are
 ```
-transformer_lens sae_lens transformers datasets torch adjustText circuitsvis
+transformer_lens sae_lens transformers datasets torch adjustText circuitsvis ipython
 ```
 We recommend you creat a new python venv named multid and install these packages,
 either manually using pip or using the existing requirements.txt if you are on a linux
