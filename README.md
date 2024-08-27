@@ -19,7 +19,7 @@ machine with Cuda 12.1:
 python -m venv multid
 pip install -r requirements.txt 
 OR
-pip install transformer_lens sae_lens transformers datasets torch adjustText circuitsvis
+pip install transformer_lens sae_lens transformers datasets torch adjustText circuitsvis ipython
 ```
 Let us know if anything does not work with this environment!
 
