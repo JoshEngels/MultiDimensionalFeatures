@@ -41,7 +41,7 @@ if not is_notebook():
         choices=["llama", "mistral"],
         help="Choose 'llama' or 'mistral' model",
     )
-    parser.add_argument("--device", type=int, default=4, help="CUDA device number")
+    parser.add_argument("--device", type=str, default="4", help="CUDA device number, or full device string")
     parser.add_argument(
         "--use_inverse_regression_probe",
         action="store_true",
@@ -73,7 +73,7 @@ if not is_notebook():
         help="Probe on linear representation with center of 0.",
     )
     args = parser.parse_args()
-    device = f"cuda:{args.device}"
+    device = (f"cuda:{args.device}" if torch.cuda.is_available() else "cpu") if args.device.isnumeric() else args.device
     day_month_choice = args.problem_type
     circle_letter = args.intervene_on
     model_name = args.model
@@ -100,7 +100,7 @@ else:
     # use_inverse_regression_probe = False
     # intervention_pca_k = 5
 
-    device = "cuda:4"
+    device = "cuda:4" if torch.cuda.is_available() else "cpu"
     circle_letter = "c"
     day_month_choice = "day"
     model_name = "mistral"
