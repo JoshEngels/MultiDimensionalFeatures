@@ -25,7 +25,7 @@ Let us know if anything does not work with this environment!
 
 ### Intervention Experiments
 
-Before running experiments, you should change BASE_DIR in intervention/utils.py to point to a location on your machine where large artifacts can be downloaded and saved (Mistral and Llama 3 take ~60GB and experiment artifacts are ~100GB).
+Before running experiments, you should change `BASE_DIR` in [`intervention/utils.py`](./intervention/utils.py) to point to a location on your machine where large artifacts can be downloaded and saved (Mistral and Llama 3 take ~60GB and experiment artifacts are ~100GB).
 
 To reproduce the intervention results, you will first need to run intervention experiments with the following commands:
 
@@ -37,7 +37,7 @@ python3 circle_probe_interventions.py day a llama --device 0 --intervention_pca_
 python3 circle_probe_interventions.py month a llama --device 0 --intervention_pca_k 5 --probe_on_cos --probe_on_sin
 ```
 
-You can then reproduce *Figure 3*, *Figure 5*, *Figure 6*, and *Table 1* by running the corresponding cells in intervention/main_text_plots.ipynb.
+You can then reproduce *Figure 3*, *Figure 5*, *Figure 6*, and *Table 1* by running the corresponding cells in [`intervention/main_text_plots.ipynb`](./intervention/main_text_plots.ipynb).
 
 
 After running these intervention experiments, you can reproduce *Figure 6* by running 
@@ -45,16 +45,16 @@ After running these intervention experiments, you can reproduce *Figure 6* by ru
 cd intervention
 python3 intervene_in_middle_of_circle.py --only_paper_plots
 ```
-and then running the corresponding cell in intervention/main_text_plots.ipynb.
+and then running the corresponding cell in [`intervention/main_text_plots.ipynb`](./intervention/main_text_plots.ipynb).
 
 You can reproduce *Figure 13*, *Figure 14*, *Figure 15*, *Table 2*, *Table 3*, and *Table 4* (all from the appendix) by running cells in intervention/appendix_plots.ipynb.
 
 
 ### SAE feature search experiments
 
-Before running experiments, you should again change BASE_DIR in sae_multid_feature_discovery/utils.py to point to a location on your machine where large artifacts can be downloaded and saved.
+Before running experiments, you should again change `BASE_DIR` in [`sae_multid_feature_discovery/utils.py`](./sae_multid_feature_discovery/utils.py) to point to a location on your machine where large artifacts can be downloaded and saved.
 
-You will need to generate SAE feature activations to generate the cluster reconstructions. The GPT-2 SAEs will be automatically downloaded when you run the below scripts, while for Mistral you will need to download our pretrained Mistral SAEs from https://www.dropbox.com/scl/fo/hznwqj4fkqvpr7jtx9uxz/AJUe0wKmJS1-fD982PuHb5A?rlkey=ffnq6pm6syssf2p7t98q9kuh1&dl=0 to sae_multid_feature_discovery/saes/mistral_saes. You can generate SAE feature activations with one of the following two commands:
+You will need to generate SAE feature activations to generate the cluster reconstructions. The GPT-2 SAEs will be automatically downloaded when you run the below scripts, while for Mistral you will need to download our pretrained Mistral SAEs from https://www.dropbox.com/scl/fo/hznwqj4fkqvpr7jtx9uxz/AJUe0wKmJS1-fD982PuHb5A?rlkey=ffnq6pm6syssf2p7t98q9kuh1&dl=0 to [`sae_multid_feature_discovery/saes/mistral_saes`](./sae_multid_feature_discovery/saes/mistral_saes). You can generate SAE feature activations with one of the following two commands:
 
 ```
 cd sae_multid_feature_discovery
@@ -64,7 +64,7 @@ python3 generate_feature_occurence_data.py --model_name mistral
 
 You can also directly download the gpt-2 layer 7 and Mistral-7B layer 8 activations data from this Dropbox folder: https://www.dropbox.com/scl/fo/frn4tihzkvyesqoumtl9u/AFPEAa6KFb8mY3NTXIEStnA?rlkey=z60j3g45jzhxwc5s5qxmbjvxs&st=da2tzqk5&dl=0. You should put them in the `sae_multid_feature_discovery` directory.
 
-You will also need to generate the actual clusters by running clustering.py, e.g.
+You will also need to generate the actual clusters by running `clustering.py`, e.g.
 ```
 python3 clustering.py --model_name gpt-2 --clustering_type spectral --layer 7
 python3 clustering.py --model_name mistral --clustering_type graph --layer 8
@@ -120,7 +120,7 @@ To reproduce the residual RGB plots in the paper (*Figure 8*, and *Figure 16*), 
 
 ## Contact
 
-If you have any questions about the paper or reproducing results, feel free to email jengels@mit.edu.
+If you have any questions about the paper or reproducing results, feel free to email [jengels@mit.edu](mailto:jengels@mit.edu).
 
 ## Citation
 
