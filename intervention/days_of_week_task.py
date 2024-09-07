@@ -1,5 +1,6 @@
 # %%
 
+from pathlib import Path
 import os
 from utils import setup_notebook, BASE_DIR
 
@@ -49,9 +50,8 @@ class DaysOfWeekTask:
         # Tokens we expect as possible answers. Best of these can optionally be saved (as opposed to best logit overall)
         self.allowable_tokens = days_of_week
 
-        self.prefix = f"{BASE_DIR}{model_name}_days_of_week/"
-        if not os.path.exists(self.prefix):
-            os.makedirs(self.prefix)
+        self.prefix = Path(BASE_DIR) / f"{model_name}_days_of_week"
+        self.prefix.mkdir(parents=True, exist_ok=True)
 
         self.num_tokens_in_answer = 1
 

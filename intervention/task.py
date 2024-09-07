@@ -1,3 +1,4 @@
+from pathlib import Path
 from utils import BASE_DIR  # Need this import to set the huggingface cache directory
 import os
 import numpy as np
@@ -24,7 +25,6 @@ class Problem:
     def __repr__(self):
         return str(self)
 
-
 def generate_and_save_acts(
     task,
     names_filter,
@@ -39,10 +39,10 @@ def generate_and_save_acts(
     forward_batch_size = 2
     num_tokens_to_generate = task.num_tokens_in_answer
     all_problems = task.generate_problems()
-    output_file = task.prefix + "results.csv"
+    output_file = task.prefix / "results.csv"
 
     if save_results_csv:
-        os.makedirs(task.prefix, exist_ok=True)
+        task.prefix.mkdir(parents=True, exist_ok=True)
         model_best_addition = "" if not save_best_logit else ", best_token"
         with open(output_file, "w") as f:
             f.write(
@@ -98,7 +98,7 @@ def generate_and_save_acts(
                     print(tensors.shape)
                 torch.save(
                     tensors,
-                    f"{task.prefix}{save_file_prefix}{current_problem_index}.pt",
+                    task.prefix / f"{save_file_prefix}{current_problem_index}.pt",
                 )
 
                 if save_results_csv:
@@ -146,7 +146,7 @@ def get_all_acts(
     all_problems = task.generate_problems()
     all_problems_already_generated = True
     for i in range(len(all_problems)):
-        if not os.path.exists(f"{task.prefix}{save_file_prefix}{i}.pt"):
+        if not (task.prefix / f"{save_file_prefix}{i}.pt").exists():
             all_problems_already_generated = False
             break
     if not all_problems_already_generated or force_regenerate:
@@ -163,7 +163,7 @@ def get_all_acts(
     all_acts = []
     for i in range(0, len(all_problems)):
         tensors = torch.load(
-            f"{task.prefix}{save_file_prefix}{i}.pt", map_location="cpu"
+            task.prefix / f"{save_file_prefix}{i}.pt", map_location="cpu"
         )
         all_acts.append(tensors)
         if len(all_acts) > 1:
@@ -186,9 +186,9 @@ def get_acts(
     if save_file_prefix != "" and save_file_prefix[-1] != "_":
         save_file_prefix += "_"
     file_name = (
-        f"{task.prefix}{save_file_prefix}layer{layer_fetch}_token{token_fetch}.pt"
+        task.prefix / f"{save_file_prefix}layer{layer_fetch}_token{token_fetch}.pt"
     )
-    if not os.path.exists(file_name) or force_regenerate:
+    if not file_name.exists() or force_regenerate:
         print(file_name, "not exists")
         all_acts = get_all_acts(
             task, names_filter=names_filter, save_file_prefix=save_file_prefix
@@ -196,7 +196,7 @@ def get_acts(
         for layer in range(all_acts.shape[1]):
             for token in range(all_acts.shape[2]):
                 file_name = (
-                    f"{task.prefix}{save_file_prefix}layer{layer}_token{token}.pt"
+                    task.prefix / f"{save_file_prefix}layer{layer}_token{token}.pt"
                 )
                 torch.save(
                     all_acts[:, layer, token, :].detach().cpu().clone(), file_name
@@ -218,11 +218,11 @@ def get_acts_pca(
     names_filter=lambda x: "resid_post" in x or "hook_embed" in x,
     save_file_prefix="",
 ):
-    act_file_name = f"{task.prefix}pca/{save_file_prefix}/layer{layer}_token{token}_pca{pca_k}{'_normalize' if normalize_rms else ''}.pt"
-    pca_pkl_file_name = f"{task.prefix}pca/{save_file_prefix}/layer{layer}_token{token}_pca{pca_k}{'_normalize' if normalize_rms else ''}.pkl"
-    os.makedirs(f"{task.prefix}/pca/{save_file_prefix}", exist_ok=True)
+    act_file_name = task.prefix / "pca" / save_file_prefix / f"layer{layer}_token{token}_pca{pca_k}{'_normalize' if normalize_rms else ''}.pt"
+    pca_pkl_file_name = task.prefix / "pca" / save_file_prefix / f"layer{layer}_token{token}_pca{pca_k}{'_normalize' if normalize_rms else ''}.pkl"
+    (task.prefix / "pca" / save_file_prefix).mkdir(parents=True, exist_ok=True)
 
-    if not os.path.exists(act_file_name) or not os.path.exists(pca_pkl_file_name):
+    if not act_file_name.exists() or not pca_pkl_file_name.exists():
         acts = get_acts(
             task,
             layer,
@@ -239,9 +239,9 @@ def get_acts_pca(
 
 
 def get_acts_pls(task, layer, token, pls_k, normalize_rms=False):
-    act_file_name = f"{task.prefix}/pls/layer{layer}_token{token}_pls{pls_k}{'_normalize' if normalize_rms else ''}.pt"
-    pls_pkl_file_name = f"{task.prefix}/pls/layer{layer}_token{token}_pls{pls_k}{'_normalize' if normalize_rms else ''}.pkl"
-    os.makedirs(f"{task.prefix}/pls", exist_ok=True)
+    act_file_name = task.prefix / "pls" / f"layer{layer}_token{token}_pls{pls_k}{'_normalize' if normalize_rms else ''}.pt"
+    pls_pkl_file_name = task.prefix / "pls" / f"layer{layer}_token{token}_pls{pls_k}{'_normalize' if normalize_rms else ''}.pkl"
+    (task.prefix / "pls").mkdir(parents=True, exist_ok=True)
 
     # if not os.path.exists(act_file_name) or not os.path.exists(pls_pkl_file_name):
     if True:
