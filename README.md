@@ -6,7 +6,7 @@ This is the github repo for our paper ["Not All Language Model Features Are Line
 
 ## Reproducing each figure
 
-Below are instructions to reproduce each figure (aspirationally). 
+Below are instructions to reproduce each figure (aspirationally).
 
 The required pthon packages to run this repo are
 ```
@@ -17,7 +17,7 @@ either manually using pip or using the existing requirements.txt if you are on a
 machine with Cuda 12.1:
 ```
 python -m venv multid
-pip install -r requirements.txt 
+pip install -r requirements.txt
 OR
 pip install transformer_lens sae_lens transformers datasets torch adjustText circuitsvis ipython
 ```
@@ -31,16 +31,16 @@ To reproduce the intervention results, you will first need to run intervention e
 
 ```
 cd intervention
-python3 circle_probe_interventions.py day a mistral --device 0 --intervention_pca_k 5 --probe_on_cos --probe_on_sin
-python3 circle_probe_interventions.py month a mistral --device 0 --intervention_pca_k 5 --probe_on_cos --probe_on_sin
-python3 circle_probe_interventions.py day a llama --device 0 --intervention_pca_k 5 --probe_on_cos --probe_on_sin
-python3 circle_probe_interventions.py month a llama --device 0 --intervention_pca_k 5 --probe_on_cos --probe_on_sin
+python3 circle_probe_interventions.py day a mistral --device cuda:0 --intervention_pca_k 5 --probe_on_cos --probe_on_sin
+python3 circle_probe_interventions.py month a mistral --device cuda:0 --intervention_pca_k 5 --probe_on_cos --probe_on_sin
+python3 circle_probe_interventions.py day a llama --device cuda:0 --intervention_pca_k 5 --probe_on_cos --probe_on_sin
+python3 circle_probe_interventions.py month a llama --device cuda:0 --intervention_pca_k 5 --probe_on_cos --probe_on_sin
 ```
 
 You can then reproduce *Figure 3*, *Figure 5*, *Figure 6*, and *Table 1* by running the corresponding cells in intervention/main_text_plots.ipynb.
 
 
-After running these intervention experiments, you can reproduce *Figure 6* by running 
+After running these intervention experiments, you can reproduce *Figure 6* by running
 ```
 cd intervention
 python3 intervene_in_middle_of_circle.py --only_paper_plots
@@ -132,5 +132,3 @@ If you have any questions about the paper or reproducing results, feel free to e
   year={2024}
 }
 ```
-
-
