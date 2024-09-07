@@ -1,12 +1,12 @@
 # %%
-
+from pathlib import Path
 import os
 from utils import BASE_DIR
 
 
 # hopefully this will help with memory fragmentation
 os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "max_split_size_mb:128"
-os.environ["TRANSFORMERS_CACHE"] = f"{BASE_DIR}.cache/"
+os.environ["TRANSFORMERS_CACHE"] = f"{(Path(BASE_DIR) / '.cache').absolute()}/"
 
 import einops
 import numpy as np
@@ -52,8 +52,8 @@ ctx_len = 256
 
 num_sae_activations_to_save = 10**9
 
-save_folder = f"{BASE_DIR}{model_name}"
-os.makedirs(save_folder, exist_ok=True)
+save_folder = Path(BASE_DIR) / model_name
+save_folder.mkdir(exist_ok=True, parents=True)
 
 t.set_grad_enabled(False)
 

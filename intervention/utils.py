@@ -1,9 +1,10 @@
 import os
 import dill as pickle
+from pathlib import Path
 
-BASE_DIR = "/data/scratch/jae/"
+BASE_DIR = Path(__file__).parent.parent / "cache"
 
-os.environ["TRANSFORMERS_CACHE"] = f"{BASE_DIR}/.cache/"
+os.environ["TRANSFORMERS_CACHE"] = f"{(Path(BASE_DIR) / '.cache').absolute()}/"
 
 
 def setup_notebook():
