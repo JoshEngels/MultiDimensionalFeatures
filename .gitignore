@@ -6,3 +6,5 @@ sae_multid_feature_discovery/saes/mistral_saes
 
 # venv
 multid
+
+feature_deconstruction/*.pdf

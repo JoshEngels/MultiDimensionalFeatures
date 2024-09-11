@@ -9,8 +9,16 @@ np.random.seed(42)
 dim = 10
 c_matrix = np.random.rand(4, dim)
 
-def f(a, b, epsilon_scale = 0.1):
-    return [c_matrix[0, i] * np.sin(a) + c_matrix[1, i] * b + c_matrix[2, i] * (a == 4) + c_matrix[3, i] * (b == 1) + np.random.normal(0, 1) * epsilon_scale for i in range(dim)]
+
+def f(a, b, epsilon_scale=0.1):
+    return [
+        c_matrix[0, i] * np.sin(a)
+        + c_matrix[1, i] * b
+        + c_matrix[2, i] * (a == 4)
+        + c_matrix[3, i] * (b == 1)
+        + np.random.normal(0, 1) * epsilon_scale
+        for i in range(dim)
+    ]
 
 
 # %%
@@ -19,7 +27,8 @@ def f(a, b, epsilon_scale = 0.1):
 a_range = range(10)
 b_range = range(10)
 
-def plot_flattened_values(flattened_values):
+
+def plot_flattened_values(flattened_values, title):
 
     pca = PCA(n_components=3)
 
@@ -36,7 +45,15 @@ def plot_flattened_values(flattened_values):
     plt.ylabel("$\\alpha$")
     plt.xlabel("$\\beta$")
 
-# 
+    # Increase size of text
+    plt.rc("font", size=15)
+
+    plt.title(f"{title})")
+
+    plt.savefig(f"simple_example_{title}.pdf", bbox_inches="tight")
+
+
+#
 
 a_values = np.array([[a for _ in b_range] for a in a_range])
 b_values = np.array([[b for b in b_range] for _ in a_range])
@@ -47,9 +64,7 @@ flattened_values = func_values.reshape([len(a_range) * len(b_range), dim])
 flattened_a = a_values.reshape([len(a_range) * len(b_range)])
 flattened_b = b_values.reshape([len(a_range) * len(b_range)])
 
-plot_flattened_values(flattened_values)
-
-
+plot_flattened_values(flattened_values, title="a")
 # %%
 
 a_4 = flattened_a == 4
@@ -64,7 +79,7 @@ predicted_values = explainers @ linear_regression
 
 residual = flattened_values - predicted_values
 
-plot_flattened_values(residual)
+plot_flattened_values(residual, title="b")
 
 # %%
 
@@ -74,8 +89,7 @@ linear_regression = np.linalg.lstsq(explainers, flattened_values, rcond=0.001)[0
 
 residual = flattened_values - explainers @ linear_regression
 
-plot_flattened_values(residual)
-
+plot_flattened_values(residual, title="c")
 
 
 # %%
@@ -87,11 +101,13 @@ linear_regression = np.linalg.lstsq(explainers, flattened_values, rcond=0.001)[0
 
 residual = flattened_values - explainers @ linear_regression
 
-plot_flattened_values(residual)
+plot_flattened_values(residual, title="d")
 
 # %%
 
-r_squared = 1 - np.sum(residual ** 2) / np.sum((flattened_values - flattened_values.mean(axis=0)) ** 2)
+r_squared = 1 - np.sum(residual**2) / np.sum(
+    (flattened_values - flattened_values.mean(axis=0)) ** 2
+)
 
 print(residual)
 

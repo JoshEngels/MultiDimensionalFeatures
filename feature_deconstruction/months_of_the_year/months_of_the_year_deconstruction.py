@@ -87,9 +87,11 @@ def deconstruct(layer, n_feature_groups):
         features.append(np.sin(2 * np.pi * (a - b) / mod * n))
         return (
             features,
-            ("circle " + str(n) + "$(\\alpha-\\beta)$")
-            if n != 1
-            else "circle $\\alpha-\\beta$",
+            (
+                ("circle " + str(n) + "$(\\alpha-\\beta)$")
+                if n != 1
+                else "circle $\\alpha-\\beta$"
+            ),
         )
 
     def cc(n=1):
