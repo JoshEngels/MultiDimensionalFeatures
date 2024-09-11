@@ -60,13 +60,21 @@ for threshold, radius in [(0, 0)]:
     special_to_plot = [138, 251, 212]
     names_to_plot = ["Weekdays cluster", "Months cluster", "Years cluster"]
     
-    for cluster_id, name in zip(good_cluster_ids_grouped, names_to_plot):
+    for cluster_id in good_cluster_ids_grouped:
+        if cluster_id not in special_to_plot:
+            continue
         cluster_value = good_cluster_id_to_value[cluster_id]
-        plt.text(cluster_value[0], cluster_value[1], name, fontsize=12)
+        name = names_to_plot[special_to_plot.index(cluster_id)]
+        if cluster_id == 251:
+            plt.text(cluster_value[0] + 0.13, cluster_value[1] + 0.02, name, fontsize=14)
+        elif cluster_id == 212:
+            plt.text(cluster_value[0] + 0.01, cluster_value[1] - 0.05, name, fontsize=14)
+        else:
+            plt.text(cluster_value[0] + 0.02, cluster_value[1] + 0.01, name, fontsize=14)
         plt.scatter(*cluster_value, color="orange")
 
-    plt.show()
-
+    # Save fig
+    plt.savefig(f"reducibility_metrics_threshold{threshold}_radius{radius}.pdf", bbox_inches="tight")
 
     # Rank clusters by max (1 - mixture_index) * separability_index)
     cluster_values = {i: [0] for i in range(1000)}
@@ -84,4 +92,5 @@ for threshold, radius in [(0, 0)]:
     print([cluster_ids.index(i) for i in special_to_plot])
 
     print(cluster_ids[:20])
+
 # %%
