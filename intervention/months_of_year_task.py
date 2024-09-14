@@ -61,12 +61,14 @@ numbers = [
 
 
 class MonthsOfYearTask:
-    def __init__(self, device, model_name="mistral", n_devices=None):
+    def __init__(self, device, model_name="mistral", n_devices=None, dtype="float32"):
         self.device = device
 
         self.model_name = model_name
 
         self.n_devices = n_devices
+
+        self.dtype = dtype
 
         # Tokens we expect as possible answers. Best of these can optionally be saved (as opposed to best logit overall)
         self.allowable_tokens = months_of_year
@@ -163,7 +165,10 @@ class MonthsOfYearTask:
         if self._lazy_model is None:
             if self.model_name == "mistral":
                 self._lazy_model = transformer_lens.HookedTransformer.from_pretrained(
-                    "mistral-7b", device=self.device, n_devices=self.n_devices
+                    "mistral-7b",
+                    device=self.device,
+                    n_devices=self.n_devices,
+                    dtype=self.dtype,
                 )
             elif self.model_name == "llama":
                 self._lazy_model = transformer_lens.HookedTransformer.from_pretrained(
@@ -171,6 +176,7 @@ class MonthsOfYearTask:
                     "meta-llama/Meta-Llama-3-8B",
                     device=self.device,
                     n_devices=self.n_devices,
+                    dtype=self.dtype,
                 )
         return self._lazy_model
 

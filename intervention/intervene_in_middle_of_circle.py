@@ -257,6 +257,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--device", type=str, default="cuda:0" if torch.cuda.is_available() else "cpu"
     )
+    parser.add_argument("--dtype", type=str, default="float32")
 
     args = parser.parse_args()
 
@@ -265,7 +266,7 @@ if __name__ == "__main__":
     if args.only_paper_plots:
         task_level_granularity = "day"
         model_name = "mistral"
-        task = DaysOfWeekTask(device, model_name=model_name)
+        task = DaysOfWeekTask(device, model_name=model_name, dtype=args.dtype)
         layer = 5
         bs = range(2, 6)
         pca_k = 5
@@ -282,9 +283,9 @@ if __name__ == "__main__":
                         bs = range(1, 13)
                     for b in bs:
                         if task_level_granularity == "day":
-                            task = DaysOfWeekTask(device, model_name=model_name)
+                            task = DaysOfWeekTask(device, model_name=model_name, dtype=args.dtype)
                         elif task_level_granularity == "month":
-                            task = MonthsOfYearTask(device, model_name=model_name)
+                            task = MonthsOfYearTask(device, model_name=model_name, dtype=args.dtype)
                         else:
                             raise ValueError(f"Unknown {task_level_granularity}")
                         for pca_k in [5]:

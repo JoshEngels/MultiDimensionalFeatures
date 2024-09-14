@@ -42,6 +42,7 @@ if not is_notebook():
         help="Choose 'llama' or 'mistral' model",
     )
     parser.add_argument("--device", type=int, default=4, help="CUDA device number")
+    parser.add_argument("--dtype", type=str, default="float32", help="Data type for torch tensors")
     parser.add_argument(
         "--use_inverse_regression_probe",
         action="store_true",
@@ -74,6 +75,7 @@ if not is_notebook():
     )
     args = parser.parse_args()
     device = f"cuda:{args.device}"
+    dtype = args.dtype
     day_month_choice = args.problem_type
     circle_letter = args.intervene_on
     model_name = args.model
@@ -101,6 +103,7 @@ else:
     # intervention_pca_k = 5
 
     device = "cuda:4"
+    dtype = "float32"
     circle_letter = "c"
     day_month_choice = "day"
     model_name = "mistral"
@@ -131,9 +134,9 @@ if probe_on_centered_linear:
 # %%
 
 if day_month_choice == "day":
-    task = DaysOfWeekTask(device, model_name=model_name)
+    task = DaysOfWeekTask(device, model_name=model_name, dtype=dtype)
 else:
-    task = MonthsOfYearTask(device, model_name=model_name)
+    task = MonthsOfYearTask(device, model_name=model_name, dtype=dtype)
 
 # %%
 
