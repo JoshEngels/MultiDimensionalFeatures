@@ -8,11 +8,11 @@ This is the github repo for our paper ["Not All Language Model Features Are Line
 
 Below are instructions to reproduce each figure (aspirationally). 
 
-The required pthon packages to run this repo are
+The required Python packages to run this repo are
 ```
 transformer_lens sae_lens transformers datasets torch adjustText circuitsvis ipython
 ```
-We recommend you creat a new python venv named multid and install these packages,
+We recommend you create a new python venv named multid and install these packages,
 either manually using pip or using the existing requirements.txt if you are on a linux
 machine with Cuda 12.1:
 ```
