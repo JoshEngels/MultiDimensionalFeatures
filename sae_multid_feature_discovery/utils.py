@@ -27,6 +27,16 @@ def get_mistral_sae(device, layer):
         .to(device)
     )
 
+# def get_mistral_sae(device, layer):
+#     from sae_lens import SAE
+
+#     return SAE.from_pretrained(
+#         release="mistral-7b-res-wg",
+#         sae_id=f"blocks.{layer}.hook_resid_pre",
+#         device=device
+#     )[0]
+
+
 
 def get_sae(device, model_name, layer):
     if model_name == "gpt-2":

@@ -9,3 +9,8 @@ multid
 
 *.pdf
 *.png
+
+*wget*
+sae_multid_feature_discovery/*.pkl
+sae_multid_feature_discovery/data
+sae_multid_feature_discovery/panes

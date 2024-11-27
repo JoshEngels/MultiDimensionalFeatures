@@ -100,6 +100,7 @@ def get_logit_diffs_from_subspace_formula_resid_intervention(
     token,
     target_to_embedding,
     letter_to_intervene_on,  # a or c
+    undo_matrix=None
 ):
     problems = task.generate_problems()
     model = task.get_model()
@@ -144,21 +145,22 @@ def get_logit_diffs_from_subspace_formula_resid_intervention(
         local_device = existing_residual_component.device
 
         local_pca_projection_matrix = pca_projection_matrix.to(local_device)
+        local_undo = undo_matrix.to(local_device) if undo_matrix is not None else local_pca_projection_matrix
 
         local_probe_q = probe_q.to(local_device)
 
         local_rep_in_q_space = target_embedding_in_q_space[change].to(local_device)
 
-        to_add = local_rep_in_q_space @ local_probe_q.T @ local_pca_projection_matrix.T
+        to_add = local_rep_in_q_space @ local_probe_q.T @ local_undo.T
 
         local_average_acts = average_acts.to(local_device)
 
         to_subtract = (
             local_average_acts
-            @ local_pca_projection_matrix
+            @ local_undo
             @ local_probe_q
             @ local_probe_q.T
-            @ local_pca_projection_matrix.T
+            @ local_undo.T
         )
 
         existing_residual_component[:, token, :] = (
@@ -209,16 +211,18 @@ def get_logit_diffs_from_subspace_formula_resid_intervention(
         local_pca_projection_matrix = pca_projection_matrix.to(local_device)
         local_average_acts = average_acts.to(local_device)
 
+        local_undo = undo_matrix.to(local_device) if undo_matrix is not None else local_pca_projection_matrix
+
         subtracted_average = restricted_pos_residual - local_average_acts
 
         local_probe_q = probe_q.to(local_device)
 
         subspace = (
             subtracted_average
-            @ local_pca_projection_matrix
+            @ local_undo
             @ local_probe_q
             @ local_probe_q.T
-            @ local_pca_projection_matrix.T
+            @ local_undo.T
         )
 
         existing_residual_component[:, token, :] = subspace + local_average_acts
@@ -233,14 +237,17 @@ def get_logit_diffs_from_subspace_formula_resid_intervention(
 
         subtracted_average = restricted_pos_residual - local_average_acts
 
+        local_undo = undo_matrix.to(local_device) if undo_matrix is not None else local_pca_projection_matrix
+
+
         local_probe_q = probe_q.to(local_device)
 
         subspace = (
             subtracted_average
-            @ local_pca_projection_matrix
+            @ local_undo
             @ local_probe_q
             @ local_probe_q.T
-            @ local_pca_projection_matrix.T
+            @ local_undo.T
         )
 
         restricted_pos_residual -= subspace

@@ -46,8 +46,6 @@ for threshold, radius in [(0, 0)]:
     good_cluster_id_to_value = {}
     for cluster_id, (mixture_indices, separability_indices) in good_cluster_ids_grouped.items():
         good_cluster_ids.append(cluster_id)
-        if cluster_id == 251:
-            print(separability_indices)
         good_cluster_values.append((np.mean(mixture_indices), np.mean(separability_indices)))
         good_cluster_id_to_value[cluster_id] = (np.mean(mixture_indices), np.mean(separability_indices))
 

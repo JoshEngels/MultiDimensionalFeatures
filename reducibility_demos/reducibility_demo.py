@@ -6,7 +6,7 @@ import math
 
 plt.rcParams["text.usetex"] = True
 
-for dataset_num in range(1, 5):
+for dataset_num in range(2, 3):
     np.random.seed(2)
     torch.manual_seed(2)
 
@@ -33,8 +33,8 @@ for dataset_num in range(1, 5):
             b = torch.randn([batch_size, 1]) * randvect1 + randoffset1
             c = torch.randn([batch_size, 1]) * randvect2 + randoffset2
             picker = torch.rand([batch_size, 1])
-            option_1 = (picker < 0.4).type(a.dtype)
-            option_2 = (picker < 0.7).type(a.dtype) - option_1
+            option_1 = (picker < 0.3).type(a.dtype)
+            option_2 = (picker < 0.9).type(a.dtype) - option_1
             option_3 = (picker < 1).type(a.dtype) - option_2 - option_1
             x = a * option_1 + b * option_2 + c * option_3
         if dataset_num == 3:

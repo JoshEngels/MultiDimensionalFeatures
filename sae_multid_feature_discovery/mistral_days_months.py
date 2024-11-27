@@ -16,6 +16,7 @@ import torch as t
 from transformers import AutoTokenizer
 
 from saes.sparse_autoencoder import SparseAutoencoder
+import dill as pickle
 
 def get_cluster_activations(
     sparse_sae_activations,
@@ -60,15 +61,15 @@ def get_cluster_activations(
 
     return np.stack(all_activations), all_token_indices
 
-def main(sae_path, clusters_file):
+def main(clusters_file):
 
     # ------------------------------
     # Load the SAE, clusters, and tokenizer
     # ------------------------------
 
-    sae = SparseAutoencoder.load_from_pretrained(
-        os.path.join(sae_path, f"Mistral-7B-v0.1_blocks.8.hook_resid_pre_65536_final.pt")
-    )
+    from utils import get_mistral_sae
+
+    sae = get_mistral_sae(device="cpu", layer=8)
     decoder_vecs = sae.W_dec.detach().cpu().numpy()
     # np.save("sae_layer8_decoder.npy", sae.W_dec.detach().cpu().numpy())
     # decoder_vecs = np.load("sae_layer8_decoder.npy")
@@ -143,7 +144,13 @@ def main(sae_path, clusters_file):
     ax1 = plt.subplot(1, 2, 1)
     # do PCA
     pca = PCA(n_components=min(5, len(clusters[61])))
-    reconstructions_pca = pca.fit_transform(reconstructions_days)
+    fit_pca = pca.fit(reconstructions_days)
+    reconstructions_pca = fit_pca.transform(reconstructions_days)
+
+    # Save fit_pca to a file using pickle
+    with open("fit_pca_days.pkl", "wb") as f:
+        pickle.dump(fit_pca, f)
+
     colors = []
     # colorwheel = plt.cm.hsv(np.linspace(0, 1-1/7, 7))
     colorwheel = plt.cm.tab10(np.linspace(0, 1, 10))
@@ -563,10 +570,8 @@ def main(sae_path, clusters_file):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--sae_path", type=str, default="saes/mistral_saes",
-        help="Path to the directory containing the Mistral-7B SAE weights.")
     parser.add_argument("--clusters_file", type=str, default="mistral_layer_8_clusters_cutoff_0.5.pkl",
         help="Path to the file containing the clusters of Mistral-7B SAE features.")
     args = parser.parse_args()
 
-    main(args.sae_path, args.clusters_file)
+    main(args.clusters_file)

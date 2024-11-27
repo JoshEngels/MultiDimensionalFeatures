@@ -13,7 +13,7 @@ import argparse
 
 # hopefully this will help with memory fragmentation
 os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "max_split_size_mb:128"
-os.environ["TRANSFORMERS_CACHE"] = "/om/user/ericjm/.cache/"
+# os.environ["TRANSFORMERS_CACHE"] = "/om/user/ericjm/.cache/"
 
 import einops
 import numpy as np
@@ -109,7 +109,7 @@ def main(args):
 
     contexts = []
     for token_index in token_indices:
-        contexts.append(token_strs[max(0, token_index-10):token_index]) # thought it should be :token_index+1, but seems like there's an off-by-one error in Josh's script, so compensating here.
+        contexts.append(token_strs[max(0, token_index-10):token_index+3]) # thought it should be :token_index+1, but seems like there's an off-by-one error in Josh's script, so compensating here.
 
     fig = sp.make_subplots(rows=2, cols=4, subplot_titles=("Cosine similarity of decoder features",
                                                             "",
@@ -140,7 +140,7 @@ def main(args):
     for context in contexts:
         c = ""
         for i, token in enumerate(context):
-            if i == len(context)-1:
+            if i == len(context)-4:
                 c += "<b>" + token + "</b>"
             else:
                 c += token
@@ -168,6 +168,7 @@ def main(args):
     fig.write_html(os.path.join(args.save_dir, f"gpt2-layer{args.layer}-cluster{args.cluster}.html"))
     fig.write_image(os.path.join(args.save_dir, f"gpt2-layer{args.layer}-cluster{args.cluster}.png"))
         
+    pickle.dump((reconstructions_pca, contexts, pca.explained_variance_ratio_), open(f"data/gpt2-layer{args.layer}-cluster{args.cluster}.pkl", "wb"))
     
 if __name__ == '__main__':
 

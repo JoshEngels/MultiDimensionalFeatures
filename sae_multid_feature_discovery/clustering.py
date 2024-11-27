@@ -8,6 +8,7 @@ from tqdm import tqdm
 import pickle
 import argparse
 from sklearn.cluster import SpectralClustering
+import numpy as np
 
 torch.set_grad_enabled(False)
 
@@ -52,12 +53,11 @@ def spectral_cluster_sims(all_sims, n_clusters=1000):
 
 
 def graph_cluster_sims(
-    all_sims, top_k_for_graph=2, sim_cutoff=0.5, prune_clusters=True
+    all_sims, top_k_for_graph=2, sim_cutoff=0.5, prune_clusters=False
 ):
     near_neighbors = torch.topk(all_sims, top_k_for_graph, dim=1)
 
     graph = [[] for _ in range(all_sims.shape[0])]
-    sim_cutoff = 0.5
     for i in tqdm(range(all_sims.shape[0])):
         top_indices = near_neighbors.indices[i]
         top_sims = near_neighbors.values[i]
@@ -92,15 +92,21 @@ def graph_cluster_sims(
         components = [c for c in components if len(c) < threshold and len(c) > 1]
 
     with open(
-        f"{model_name}_layer_{layer}_clusters_cutoff_{sim_cutoff}.pkl", "wb"
+        f"{model_name}_layer_{layer}_clusters_cutoff_{sim_cutoff}_topk_{top_k_for_graph}.pkl", "wb"
     ) as f:
         pickle.dump(components, f)
 
 
 all_sims = all_sae_features @ all_sae_features.T
 
+# Set diagonal to 0
+all_sims.fill_diagonal_(0)
+
 if method == "graph":
-    graph_cluster_sims(all_sims)
+    cutoffs = list(np.logspace(start=-1, stop=0, num=20)) + [0.5]
+    for top_k_for_graph in [2, 3, 4]:
+        for sim_cutoff in cutoffs:
+            graph_cluster_sims(all_sims, top_k_for_graph=top_k_for_graph, sim_cutoff=sim_cutoff)
 
 else:
     all_sims = torch.clamp(all_sims, -1, 1)
