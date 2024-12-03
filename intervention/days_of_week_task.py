@@ -7,6 +7,7 @@ setup_notebook()
 
 import numpy as np
 import transformer_lens
+import torch
 from task import Problem, get_acts, plot_pca, get_all_acts, get_acts_pca
 from task import activation_patching
 
@@ -148,7 +149,11 @@ class DaysOfWeekTask:
 
     def get_model(self):
         if self.n_devices is None:
-            self.n_devices = 2 if "llama" == self.model_name else 1
+            self.n_devices = (
+                min(2, max(1, torch.cuda.device_count()))
+                if "llama" == self.model_name
+                else 1
+            )
         if self._lazy_model is None:
             if self.model_name == "mistral":
                 self._lazy_model = transformer_lens.HookedTransformer.from_pretrained(
