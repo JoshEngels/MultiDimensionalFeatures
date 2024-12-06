@@ -11,7 +11,7 @@ from task import Problem, get_acts, plot_pca, get_all_acts, get_acts_pca
 from task import activation_patching
 
 
-device = "cuda:4"
+device = "cuda:4" if torch.cuda.is_available() else "cpu"
 #
 # %%
 
