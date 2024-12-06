@@ -171,7 +171,7 @@ problems = task.generate_problems()
 probe_projections = {}
 target_to_embeddings = {}
 
-os.makedirs(f"{task.prefix}/circle_probes_{circle_letter}", exist_ok=True)
+(task.prefix / f"circle_probes_{circle_letter}").mkdir(exist_ok=True)
 
 all_maes = []
 all_r_squareds = []
@@ -262,7 +262,7 @@ for layer in list(layers_to_analyze):
                 "probe_r": probe_r,
                 "target_to_embedding": target_to_embedding,
             },
-            f"{task.prefix}/circle_probes_{circle_letter}/{probe_file_extension}_layer_{layer}_token_{token}_pca_{pca_k}.pt",
+            task.prefix / f"circle_probes_{circle_letter}" / f"{probe_file_extension}_layer_{layer}_token_{token}_pca_{pca_k}.pt",
         )
 
         mae = (predictions - multid_targets_train).abs().mean()

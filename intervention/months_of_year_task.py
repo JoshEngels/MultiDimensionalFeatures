@@ -1,6 +1,7 @@
 # %%
 
 import os
+from pathlib import Path
 from utils import setup_notebook, BASE_DIR
 
 setup_notebook()
@@ -71,9 +72,8 @@ class MonthsOfYearTask:
         # Tokens we expect as possible answers. Best of these can optionally be saved (as opposed to best logit overall)
         self.allowable_tokens = months_of_year
 
-        self.prefix = f"{BASE_DIR}{model_name}_months_of_year/"
-        if not os.path.exists(self.prefix):
-            os.makedirs(self.prefix)
+        self.prefix = Path(BASE_DIR) / f"{model_name}_months_of_year"
+        self.prefix.mkdir(parents=True, exist_ok=True)
 
         self.num_tokens_in_answer = 1
 
